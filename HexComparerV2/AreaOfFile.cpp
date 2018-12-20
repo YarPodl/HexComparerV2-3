@@ -13,7 +13,10 @@ AreaOfFile::~AreaOfFile()
 
 BOOL AreaOfFile::Initialize(HWND hWnd, HINSTANCE hInst)
 {
+	// Удаление элементов (если существовали)
 	CloseHandle();
+
+	// Поле ввода названия файла
 	m_hEdit = CreateWindowW(
 		L"edit",
 		L"",
@@ -21,10 +24,14 @@ BOOL AreaOfFile::Initialize(HWND hWnd, HINSTANCE hInst)
 		m_rectMenu.left, m_rectMenu.top,
 		m_rectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
+
+	// Проверка успешности
 	if (!m_hEdit)
 	{
 		return FALSE;
 	}
+
+	// Кнопка открытия файла
 	m_hButton = CreateWindowW(
 		L"button",
 		L">>",
@@ -32,10 +39,14 @@ BOOL AreaOfFile::Initialize(HWND hWnd, HINSTANCE hInst)
 		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
+
+	// Проверка успешности
 	if (!m_hButton)
 	{
 		return FALSE;
 	}
+
+	// Создание ScrollBar
 	m_hScrollBar = CreateWindowW(
 		L"scrollbar",
 		NULL,
@@ -43,10 +54,13 @@ BOOL AreaOfFile::Initialize(HWND hWnd, HINSTANCE hInst)
 		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
+
+	// Проверка успешности
 	if (!m_hScrollBar)
 	{
 		return FALSE;
 	}
+
 	return TRUE;
 }
 
@@ -56,10 +70,12 @@ void AreaOfFile::CloseHandle()
 	{
 		DestroyWindow(m_hEdit);
 	}
+
 	if (m_hButton)
 	{
 		DestroyWindow(m_hButton);
 	}
+
 	if (m_hScrollBar)
 	{
 		DestroyWindow(m_hScrollBar);
@@ -68,8 +84,8 @@ void AreaOfFile::CloseHandle()
 
 void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 {
-	INT64		firstPaintingRow;	// Первая рисуемая строка (считая от первой видимой)
-	INT64		lastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
+	int		firstPaintingRow;	// Первая рисуемая строка (считая от первой видимой)
+	int		lastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
 
 	// Вычисление рисуемых строк через не валидную область
 	firstPaintingRow = (ps.rcPaint.top - m_rectData.top) / heightChar;
@@ -90,8 +106,8 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 	// Номер текущего байта от начала файла
 	INT64 numberOfByte = firstPaintingRow * LENGTH_OF_BYTE_STRINGS;
 
-	// Цвет номера
-	SetTextColor(hdc, m_baseTextColor);
+	// Исходный цвет текста
+	COLORREF m_baseTextColor = GetTextColor(hdc);
 
 	// Отображение номеров строк
 	for (int NumberRow = firstPaintingRow; NumberRow < lastPaintingRow; NumberRow++)
@@ -148,30 +164,42 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 			numberOfByte++;
 		}
 	}
+
+	// Возврат исходного цвета
 	SetTextColor(hdc, m_baseTextColor);
 }
 
 void AreaOfFile::setSize(RECT client)
 {
+	// Размер области с данными
 	m_rectData = client;
 	m_rectData.top = client.top + HEIGHT_MENU;
 	m_rectData.right = client.right - WIDTH_SCROLLBAR;
 
+	// Размер меню
 	m_rectMenu = client;
 	m_rectMenu.bottom = client.top + HEIGHT_MENU;
 
+	// Установка размера и позиции поля ввода
 	SetWindowPos(m_hEdit, HWND_BOTTOM,
 		m_rectMenu.left, m_rectMenu.top,
 		m_rectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		0);
+
+	// Установка размера и позиции кнопки
 	SetWindowPos(m_hButton, HWND_BOTTOM,
 		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		0);
+
+	// Установка размера и позиции ScrollBar
 	SetWindowPos(m_hScrollBar, HWND_BOTTOM,
 		m_rectData.left + m_rectData.right - WIDTH_SCROLLBAR, m_rectData.top,
 		WIDTH_SCROLLBAR, m_rectData.bottom - m_rectData.top,
 		0);
+
+	// Обновление данных в для ScrollBar
+	UpdateScrollInfo();
 }
 
 void AreaOfFile::setFont(HFONT hFont)
@@ -204,9 +232,18 @@ int AreaOfFile::getCountOfVisibleRows()
 	return m_countOfVisibleRows;
 }
 
+void AreaOfFile::setDateOfScroll(INT64 countRows, double ratioOfScroll, int maxScrollPos)
+{
+	m_ratioOfScroll = ratioOfScroll;
+	m_maxScrollPos = maxScrollPos;
+}
+
 void AreaOfFile::Scroll(INT64 scrollInc)
 {
-
+	m_scrollPos += scrollInc;
+	ScrollWindowEx(hWnd, 0, -heightChar * scrollInc, &m_rectData, &m_rectData, NULL, NULL, SW_INVALIDATE);
+	SetScrollPos(hWnd, SB_VERT, m_scrollPos / m_ratioOfScroll + 0.5, true);
+	UpdateWindow(hWnd);
 }
 
 
@@ -250,13 +287,15 @@ void AreaOfFile::PaintByte(HDC hdc, int numberLine, int numberByte, WCHAR string
 
 void AreaOfFile::UpdateScrollInfo()
 {
-	SCROLLINFO scrollInfo;
 	m_countOfVisibleRows = (m_rectData.bottom - m_rectData.top) / heightChar;
+
+	SCROLLINFO scrollInfo;
 	scrollInfo.cbSize = sizeof(scrollInfo);
 	scrollInfo.nMin = 0;
-	scrollInfo.nMax = m_countRows > m_countOfVisibleRows ? maxScrollPos : 0;
+	scrollInfo.nMax = m_countRows > m_countOfVisibleRows ? m_maxScrollPos : 0;
 	scrollInfo.nPage = m_countOfVisibleRows;
 	scrollInfo.fMask = SIF_RANGE | SIF_PAGE;
+
 	SetScrollInfo(m_hScrollBar, SB_CTL, &scrollInfo, TRUE);
 }
 

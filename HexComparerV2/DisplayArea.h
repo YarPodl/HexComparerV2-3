@@ -23,7 +23,7 @@ private:
 	HINSTANCE		hInst;
 
 	// Общее количество строк
-	INT64			countRows;
+	INT64			m_countRows;
 
 	// Позиция скроллинга (номер первой отображаемой строки)
 	INT64			scrollPos;
@@ -40,7 +40,8 @@ private:
 	// Ширина клиентской области окна
 	int				widthClient;
 
-	//int				m_minCountOfVisibleRows = 0;
+	// Минимальное значение количества видимых строк для всех областей
+	int				m_minCountOfVisibleRows = 0;
 
 	// Соотношение между реальной позицией скроллинга и позицией бегунка
 	double			ratioOfScroll = 0;
@@ -49,7 +50,7 @@ private:
 	HFONT			hFont = NULL;
 
 	// Максимальная позиция бегунка
-	unsigned int	maxScrollPos;
+	int				m_maxScrollPos;
 
 
 	void			СhangeEdit(LPARAM lParam);

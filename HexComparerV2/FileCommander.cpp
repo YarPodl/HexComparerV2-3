@@ -48,7 +48,9 @@ BOOL FileCommander::LoadFile(int indexFile, LPCWSTR fileName)
 		m_isLoadedFiles[indexFile] = TRUE;
 		return TRUE;
 	}
+
 	m_isLoadedFiles[indexFile] = FALSE;
+
 	return FALSE;
 }
 
@@ -58,9 +60,9 @@ void FileCommander::CloseFile(int indexFile)
 	m_fileMappings[indexFile].CloseFile();
 }
 
-StateOfByte FileCommander::getByte(int indexFile, INT64 numberOfByte, OUT BYTE & b)
+StateOfByte FileCommander::getByte(int indexFile, INT64 numberOfByte, OUT BYTE & Byte)
 {
-	b = 0;
+	Byte = 0;
 
 	// Если не был загружен файл
 	if (!m_isLoadedFiles[indexFile])	
@@ -74,22 +76,24 @@ StateOfByte FileCommander::getByte(int indexFile, INT64 numberOfByte, OUT BYTE &
 		Compare(numberOfByte);
 	}
 
-	b = m_currentBytes[indexFile];
+	Byte = m_currentBytes[indexFile];
 
 	return m_currentStateOfBytes[indexFile];
 }
 
 INT64 FileCommander::getMaxSize()
 {
-	INT64 maxSizeOfFile;
-	INT64 sizeOfFile;
+	INT64	MaxSizeOfFile	= 0;
+	INT64	SizeOfFile		= 0;
+
 	for (int i = 0; i < COUNT_OF_FILES; i++)
 	{
-		sizeOfFile = m_fileMappings[i].getSizeOfFile();
-		if (sizeOfFile > maxSizeOfFile)
+		SizeOfFile = m_fileMappings[i].getSizeOfFile();
+		if (SizeOfFile > MaxSizeOfFile)
 		{
-			maxSizeOfFile = sizeOfFile;
+			MaxSizeOfFile = SizeOfFile;
 		}
 	}
-	return maxSizeOfFile;
+
+	return MaxSizeOfFile;
 }

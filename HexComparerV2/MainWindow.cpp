@@ -20,14 +20,14 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 	m_displayArea = new DisplayArea(m_hWnd, m_hInst);
 
 	// ¬ÂÏÂÌÌÓ
-	if (!m_displayArea->loadFile(0, L"C:\\Users\\user\\Documents\\test"))
+	/*f (!m_displayArea->loadFile(0, L"C:\\Users\\user\\Documents\\test"))
 	{
 		MessageBoxW(m_hWnd, L"Œÿ»¡ ¿ Œ“ –€“»ﬂ ‘¿…À¿ dotnetfx35", L"", 0);
 	}
 	if (!m_displayArea->loadFile(1, L"C:\\Users\\user\\Documents\\dotnetfx351.exe"))
 	{
 		MessageBoxW(m_hWnd, L"Œÿ»¡ ¿ Œ“ –€“»ﬂ ‘¿…À¿ dotnetfx351", L"", 0);
-	}
+	}*/
 
 	SetPropW(m_hWnd, THIS_PROP, this);
 

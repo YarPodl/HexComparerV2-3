@@ -1,7 +1,6 @@
 #pragma once
 #include "stdafx.h"
 #include "FileMapping.h"
-#include "DisplayOfFile.h"
 #include "FileCommander.h"
 
 #define LENGTH_OF_BUFFER 18
@@ -28,11 +27,17 @@ private:
 	int				widthChar						= 0;
 	int				heightChar						= 0;
 	int				m_lengthOfNumberRow				= 0;
-	INT64			m_countOfVisibleRows			= 0;
-	INT64			m_scrollPos						= 0;
-	COLORREF		m_baseTextColor					= 0;
+	int				m_countOfVisibleRows			= 0;
+	INT64			m_scrollPos = 0;
 
+	// Соотношение между реальной позицией скроллинга и позицией бегунка
+	double			m_ratioOfScroll					= 0;
 
+	// Максимальная позиция бегунка
+	int				m_maxScrollPos					= 0;
+
+	// Общее количество строк
+	INT64			m_countRows						= 0;
 
 
 	void		UpdateScrollInfo();
@@ -60,6 +65,7 @@ public:
 	HWND		getEdit();
 	HWND		getScrollBar();
 	int			getCountOfVisibleRows();
+	void setDateOfScroll(INT64 countRows, double ratioOfScroll, int maxScrollPos);
 	void		Scroll(INT64 scrollInc);
 };
 
