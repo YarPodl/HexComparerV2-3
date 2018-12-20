@@ -60,7 +60,7 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 	SetSizeAreaOfFile();
 	Scroll();
 
-
+	/*
 	// ћинимальное количество видимых строк 
 	m_minCountOfVisibleRows = m_areasOfFiles[0].getCountOfVisibleRows();
 
@@ -73,6 +73,7 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 			m_minCountOfVisibleRows = m_areasOfFiles[i].getCountOfVisibleRows();
 		}
 	}
+	*/
 }
 
 void DisplayArea::Command(WPARAM wParam, LPARAM lParam)

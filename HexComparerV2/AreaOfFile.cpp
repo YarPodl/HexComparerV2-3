@@ -11,12 +11,67 @@ AreaOfFile::~AreaOfFile()
 {
 }
 
+BOOL AreaOfFile::Initialize(HWND hWnd, HINSTANCE hInst)
+{
+	CloseHandle();
+	m_hEdit = CreateWindowW(
+		L"edit",
+		L"",
+		WS_CHILD | WS_VISIBLE | WS_BORDER,
+		m_rectMenu.left, m_rectMenu.top,
+		m_rectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+	if (!m_hEdit)
+	{
+		return FALSE;
+	}
+	m_hButton = CreateWindowW(
+		L"button",
+		L">>",
+		WS_CHILD | WS_VISIBLE,
+		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+	if (!m_hButton)
+	{
+		return FALSE;
+	}
+	m_hScrollBar = CreateWindowW(
+		L"scrollbar",
+		NULL,
+		WS_CHILD | WS_VISIBLE | SBS_VERT,
+		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+	if (!m_hScrollBar)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
+
+void AreaOfFile::CloseHandle()
+{
+	if (m_hEdit)
+	{
+		DestroyWindow(m_hEdit);
+	}
+	if (m_hButton)
+	{
+		DestroyWindow(m_hButton);
+	}
+	if (m_hScrollBar)
+	{
+		DestroyWindow(m_hScrollBar);
+	}
+}
+
 void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 {
 	INT64		firstPaintingRow;	// ѕерва€ рисуема€ строка (счита€ от первой видимой)
 	INT64		lastPaintingRow;	// ѕоследн€€ рисуема€ строка (счита€ от первой видимой)
 
-	// ¬ычисление рисуемых строк через невалидную область
+	// ¬ычисление рисуемых строк через не валидную область
 	firstPaintingRow = (ps.rcPaint.top - m_rectData.top) / heightChar;
 	lastPaintingRow  = (ps.rcPaint.bottom - m_rectData.top) / heightChar + 1;
 
@@ -96,6 +151,64 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 	SetTextColor(hdc, m_baseTextColor);
 }
 
+void AreaOfFile::setSize(RECT client)
+{
+	m_rectData = client;
+	m_rectData.top = client.top + HEIGHT_MENU;
+	m_rectData.right = client.right - WIDTH_SCROLLBAR;
+
+	m_rectMenu = client;
+	m_rectMenu.bottom = client.top + HEIGHT_MENU;
+
+	SetWindowPos(m_hEdit, HWND_BOTTOM,
+		m_rectMenu.left, m_rectMenu.top,
+		m_rectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		0);
+	SetWindowPos(m_hButton, HWND_BOTTOM,
+		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		0);
+	SetWindowPos(m_hScrollBar, HWND_BOTTOM,
+		m_rectData.left + m_rectData.right - WIDTH_SCROLLBAR, m_rectData.top,
+		WIDTH_SCROLLBAR, m_rectData.bottom - m_rectData.top,
+		0);
+}
+
+void AreaOfFile::setFont(HFONT hFont)
+{
+	SendMessageW(m_hEdit, WM_SETFONT, (WPARAM)hFont, 1);
+}
+
+void AreaOfFile::setFileCommander(FileCommander * fileCommander)
+{
+	m_fileCommander = fileCommander;
+}
+
+HWND AreaOfFile::getButton()
+{
+	return HWND();
+}
+
+HWND AreaOfFile::getEdit()
+{
+	return HWND();
+}
+
+HWND AreaOfFile::getScrollBar()
+{
+	return HWND();
+}
+
+int AreaOfFile::getCountOfVisibleRows()
+{
+	return m_countOfVisibleRows;
+}
+
+void AreaOfFile::Scroll(INT64 scrollInc)
+{
+
+}
+
 
 
 void AreaOfFile::PaintNumberLine(HDC hdc, int numberLine, INT64 numberLineForView)
@@ -144,7 +257,7 @@ void AreaOfFile::UpdateScrollInfo()
 	scrollInfo.nMax = m_countRows > m_countOfVisibleRows ? maxScrollPos : 0;
 	scrollInfo.nPage = m_countOfVisibleRows;
 	scrollInfo.fMask = SIF_RANGE | SIF_PAGE;
-	SetScrollInfo(m_scrollBar, SB_CTL, &scrollInfo, TRUE);
+	SetScrollInfo(m_hScrollBar, SB_CTL, &scrollInfo, TRUE);
 }
 
 

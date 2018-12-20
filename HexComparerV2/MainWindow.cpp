@@ -168,11 +168,11 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		case VK_PRIOR:
-			m_displayArea->scrollPageUp(TODO);
+			m_displayArea->scrollPageUp(lParam);
 			break;
 
 		case VK_NEXT:
-			m_displayArea->scrollPageDown();
+			m_displayArea->scrollPageDown(lParam);
 			break;
 
 			/*case VK_RETURN:
