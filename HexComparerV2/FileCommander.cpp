@@ -41,6 +41,11 @@ void FileCommander::Compare(INT64 numberOfByte)
 }
 
 
+FileCommander::FileCommander()
+{
+	//m_isLoadedFiles[0] = 1;
+}
+
 BOOL FileCommander::LoadFile(int indexFile, LPCWSTR fileName)
 {
 	if (m_fileMappings[indexFile].OpenFile(fileName))
@@ -54,6 +59,11 @@ BOOL FileCommander::LoadFile(int indexFile, LPCWSTR fileName)
 	return FALSE;
 }
 
+BOOL FileCommander::isLoadedFile(int indexfile)
+{
+	return m_isLoadedFiles[indexfile];
+}
+
 void FileCommander::CloseFile(int indexFile)
 {
 	m_isLoadedFiles[indexFile] = FALSE;
@@ -63,12 +73,6 @@ void FileCommander::CloseFile(int indexFile)
 StateOfByte FileCommander::getByte(int indexFile, INT64 numberOfByte, OUT BYTE & Byte)
 {
 	Byte = 0;
-
-	// Если не был загружен файл
-	if (!m_isLoadedFiles[indexFile])	
-	{
-		return FileNotLoaded;
-	}
 
 	// Если байты с данным номером еще не анализировались
 	if (numberOfByte != m_currentNumberByte)

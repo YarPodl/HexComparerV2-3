@@ -13,7 +13,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 
 	HDC hdc = GetDC(hWnd);
 	hFont = CreateFontW(FONT_SIZE_HEIGHT, 
-				FONT_SIZE_WIDTH, 
+				FONT_SIZE_HEIGHT * FONT_SIZE_RELATION,
 				0, 0, 
 				FW_NORMAL, 
 				FALSE, FALSE, FALSE,
@@ -26,10 +26,17 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 
 	SelectObject(hdc, hFont);
 
+
 	
 	ReleaseDC(hWnd, hdc);
 
 	////////////////////////////////
+
+	// Цикл прохода по областям
+	for (int i = 0; i < COUNT_OF_FILES; i++)
+	{
+		m_areasOfFiles[i].Initialize(i, hWnd, hInst, &m_fileCommander);
+	}
 }
 
 
@@ -102,6 +109,7 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 	{
 		m_areasOfFiles[i].Paint(hdc, ps);
 	}
+	SelectObject(hdc, hFont);
 }
 
 void DisplayArea::scrollLineUp()

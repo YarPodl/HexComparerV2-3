@@ -118,7 +118,6 @@
   <ItemGroup>
     <ClCompile Include="AreaOfFile.cpp" />
     <ClCompile Include="DisplayArea.cpp" />
-    <ClCompile Include="DisplayOfFile.cpp" />
     <ClCompile Include="FileCommander.cpp" />
     <ClCompile Include="FileMapping.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -128,7 +127,6 @@
   <ItemGroup>
     <ClInclude Include="AreaOfFile.h" />
     <ClInclude Include="DisplayArea.h" />
-    <ClInclude Include="DisplayOfFile.h" />
     <ClInclude Include="FileCommander.h" />
     <ClInclude Include="FileMapping.h" />
     <ClInclude Include="MainWindow.h" />

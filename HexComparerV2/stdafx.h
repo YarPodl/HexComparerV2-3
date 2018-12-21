@@ -5,17 +5,20 @@
 #include <windows.h>
 #include "resource.h"
 
-// Максимальная длина строк (буфферных) в программе
+// Максимальная длина строк (буферных) в программе
 #define MAX_SIZE_STRING 100
 
-// Максимальная длина строк (буфферных) в программе
+// Максимальная длина строк (буферных) в программе
 #define LENGTH_PATH 1024
 
 // Высота символа
 #define FONT_SIZE_HEIGHT 15
 
+// Отношение ширины символа к его высоте
+#define FONT_SIZE_RELATION 0.4
+
 // Ширина символа
-#define FONT_SIZE_WIDTH 6
+//#define FONT_SIZE_WIDTH 6
 
 // Шрифт
 #define FONT_FAMILY L"Lucida Console"
@@ -34,14 +37,20 @@
 // Количество сравниваемых файлов
 #define COUNT_OF_FILES 2
 
+// Начальная высота окна
+#define HEIGHT_WINDOW 300
+
+// Начальная ширина окна
+#define WIDTH_WINDOW 600
+
 // Минимальная высота окна
-#define MIN_HEIGHT_WINDOW 450
+#define MIN_HEIGHT_WINDOW 150
 
 // Минимальная ширина окна
-#define MIN_WIDTH_WINDOW 850
+#define MIN_WIDTH_WINDOW 400
 
 // Высота меню
-#define HEIGHT_MENU 30
+#define HEIGHT_MENU 20
 
 // Высота кнопок
 #define HEIGHT_BUTTONS 20
@@ -53,27 +62,28 @@
 #define TEXT_COLOR_SELECT RGB(255, 0, 0)
 
 // Отступ сверху
-#define INDENT_OF_TOP 0
+#define INDENT_OF_TOP 3
 
 // Отступы перед столбцом с номером x (ширина в символах)
 #define INDENT1 1	
-#define INDENT2 5
-#define INDENT3 5
+#define INDENT2 4
+#define INDENT3 4
+#define INDENT4 2
 
 // Количество символов для отображения байта
 #define CharsForByte 2
 
 // Отступы между байтами 2 столбца (в символах)
-#define INDENT_BETWEEN_BYTES2 2
+#define INDENT_BETWEEN_BYTES2 1
 
 // Ширина scrollBar
 #define WIDTH_SCROLLBAR 20
 
 // Отступы между буквами 3 столбца (в символах)
-#define INDENT_BETWEEN_LETTERS3 1
+#define INDENT_BETWEEN_LETTERS3 0
 
 // Заголовок окна программы
 #define TITLE L"Сравнение файлов"
 
 // Класс окна программы
-#define WINDOWCLASS L"HexComparerV1"
+#define WINDOWCLASS L"HexComparerV2"

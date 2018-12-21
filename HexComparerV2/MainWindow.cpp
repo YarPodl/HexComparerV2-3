@@ -20,11 +20,11 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 	m_displayArea = new DisplayArea(m_hWnd, m_hInst);
 
 	// ¬ÂÏÂÌÌÓ
-	/*f (!m_displayArea->loadFile(0, L"C:\\Users\\user\\Documents\\test"))
+	if (!m_displayArea->loadFile(0, L"D:\\Work\\ÃËÌËÏÛÏ\\HexComparerV1\\HexComparerV1\\HexComparerV1.vcxproj"))
 	{
 		MessageBoxW(m_hWnd, L"Œÿ»¡ ¿ Œ“ –€“»ﬂ ‘¿…À¿ dotnetfx35", L"", 0);
 	}
-	if (!m_displayArea->loadFile(1, L"C:\\Users\\user\\Documents\\dotnetfx351.exe"))
+	/*if (!m_displayArea->loadFile(1, L"C:\\Users\\user\\Documents\\dotnetfx351.exe"))
 	{
 		MessageBoxW(m_hWnd, L"Œÿ»¡ ¿ Œ“ –€“»ﬂ ‘¿…À¿ dotnetfx351", L"", 0);
 	}*/
@@ -39,7 +39,7 @@ int MainWindow::Start(int nCmdShow)
 	ShowWindow(m_hWnd, nCmdShow);
 	UpdateWindow(m_hWnd);
 
-	HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
+	//HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
 	MSG msg;
 
@@ -225,9 +225,9 @@ BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 	m_hWnd = CreateWindowW(
 		WINDOWCLASS,
 		(LPCWSTR)TITLE,
-		WS_OVERLAPPEDWINDOW | WS_VSCROLL,
+		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0,
-		MIN_WIDTH_WINDOW, MIN_HEIGHT_WINDOW,
+		WIDTH_WINDOW, HEIGHT_WINDOW,
 		nullptr, nullptr, hInstance, nullptr);
 
 	if (!m_hWnd)

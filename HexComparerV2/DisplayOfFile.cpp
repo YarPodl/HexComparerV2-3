@@ -67,6 +67,7 @@ void DisplayOfFile::SetData(RECT clientRect, HWND hWnd, HINSTANCE hInst)
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		0);
 }
+
 void DisplayOfFile::SetFont(int widthChar, int heightChar, INT64 countRows)
 {
 	this->widthChar = widthChar;
@@ -152,6 +153,10 @@ void DisplayOfFile::ByteToHexChars(byte in, WCHAR out[])
 	{
 		out[1] = (out[1] - L'9' + L'A' - 1);
 	}
+}
+
+void DisplayOfFile::UpdateFont()
+{
 }
 
 
