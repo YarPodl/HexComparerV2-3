@@ -4,6 +4,7 @@
 
 typedef enum StateOfByte
 {
+	FileNtLoaded,
 	FileEnded,
 	ByteEqual,
 	ByteNotEqual
@@ -12,7 +13,11 @@ typedef enum StateOfByte
 class FileCommander
 {
 private:
+	/// <summary>
+	/// 
+	/// </summary>
 	FileMapping		m_fileMappings[COUNT_OF_FILES];
+
 	INT64			m_currentNumberByte						= -1;
 	BYTE			m_currentBytes[COUNT_OF_FILES]			= { 0 };
 	BOOL			m_isLoadedFiles[COUNT_OF_FILES]			= { 0 };
@@ -21,10 +26,10 @@ private:
 	void			Compare(INT64 numberOfByte);
 public:
 					FileCommander();
-	BOOL			LoadFile(int indexFile, LPCWSTR fileName);
-	BOOL			isLoadedFile(int indexfile);
-	void			CloseFile(int indexFile);
-	StateOfByte		getByte(int indexFile, INT64 numberOfByte, OUT BYTE & b);
+	BOOL			LoadFile(INT indexFile, LPCWSTR fileName);
+	BOOL			isLoadedFile(INT indexfile);
+	void			CloseFile(INT indexFile);
+	StateOfByte		getByte(INT indexFile, INT64 numberOfByte, OUT BYTE & b);
 	INT64			getMaxSize();
 };
 

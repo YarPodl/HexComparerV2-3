@@ -11,7 +11,7 @@ AreaOfFile::~AreaOfFile()
 {
 }
 
-BOOL AreaOfFile::Initialize(int number, HWND hWnd, HINSTANCE hInst, FileCommander * fileCommander)
+BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander)
 {
 	m_numberOfArea = number;
 	m_hWnd = hWnd;
@@ -36,6 +36,8 @@ BOOL AreaOfFile::Initialize(int number, HWND hWnd, HINSTANCE hInst, FileCommande
 		return FALSE;
 	}
 
+	SendMessageW(m_hEdit, WM_SETFONT, (WPARAM)hFont, 1);
+
 	// Кнопка открытия файла
 	m_hButton = CreateWindowW(
 		L"button",
@@ -56,8 +58,10 @@ BOOL AreaOfFile::Initialize(int number, HWND hWnd, HINSTANCE hInst, FileCommande
 		L"scrollbar",
 		NULL,
 		WS_CHILD | WS_VISIBLE | SBS_VERT,
-		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, 
+		m_rectMenu.top,
+		WIDTH_BUTTONS, 
+		HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Проверка успешности
@@ -65,6 +69,8 @@ BOOL AreaOfFile::Initialize(int number, HWND hWnd, HINSTANCE hInst, FileCommande
 	{
 		return FALSE;
 	}
+
+	UpdateNumberOfRow();
 
 	return TRUE;
 }
@@ -74,69 +80,68 @@ void AreaOfFile::CloseHandle()
 	if (m_hEdit)
 	{
 		DestroyWindow(m_hEdit);
+		m_hEdit = NULL;
 	}
 
 	if (m_hButton)
 	{
 		DestroyWindow(m_hButton);
+		m_hButton = NULL;
 	}
 
 	if (m_hScrollBar)
 	{
 		DestroyWindow(m_hScrollBar);
+		m_hScrollBar = NULL;
 	}
 }
 
 void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 {
 	if (!m_fileCommander->isLoadedFile(m_numberOfArea))
-	{
 		return;
-	}
 
-	int		firstPaintingRow;	// Первая рисуемая строка (считая от первой видимой)
-	int		lastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
+	
+	INT		FirstPaintingRow;	// Первая рисуемая строка (считая от первой видимой)
+	INT		LastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
 
 	// Вычисление рисуемых строк через не валидную область
-	firstPaintingRow = (ps.rcPaint.top - m_rectData.top) / m_heightChar;
-	lastPaintingRow  = (ps.rcPaint.bottom - m_rectData.top) / m_heightChar + 1;
+	FirstPaintingRow = (ps.rcPaint.top - m_rectData.top) / m_heightChar;
+	LastPaintingRow  = (ps.rcPaint.bottom - m_rectData.top) / m_heightChar + 1;
 
 	// Ограничение на выход за пределы видимости
-	if (firstPaintingRow < 0)
+	if (FirstPaintingRow < 0)
 	{
-		firstPaintingRow = 0;
+		FirstPaintingRow = 0;
 	}
-	if (lastPaintingRow >= m_countOfVisibleRows)
+	if (LastPaintingRow > m_countOfVisibleRows)
 	{
-		lastPaintingRow = m_countOfVisibleRows;
+		LastPaintingRow = m_countOfVisibleRows + 1;
 	}
 
 	SelectObject(hdc, m_hFont);	// Шрифт
 
 	// Номер текущего байта от начала файла
-	INT64 numberOfByte = firstPaintingRow * LENGTH_OF_BYTE_STRINGS;
+	INT64 numberOfByte = (FirstPaintingRow + m_scrollPos) * LENGTH_OF_BYTE_STRINGS;
 
 	// Исходный цвет текста
 	COLORREF m_baseTextColor = GetTextColor(hdc);
 
 	// Состояние байта
 	StateOfByte	State;
-	// Значение
-	BYTE		Byte							= 0;
-	// Байт как символ
-	char		charOfByte						= 0;
-	// Байт как Hex строка
-	WCHAR		stringOfByte[LENGTH_OF_BYTE]	= { 0 };
+	
+	BYTE	Byte							= 0;		// Значение
+	CHAR	charOfByte						= 0;		// Байт как символ	
+	WCHAR	stringOfByte[LENGTH_OF_BYTE]	= { 0 };	// Байт как Hex строка
 
 	// Цикл по строкам
-	for (int NumberRow = firstPaintingRow; NumberRow < lastPaintingRow; NumberRow++)
-	{
-		
+	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
+	{		
 		// Отображение номера строки
 		PaintNumberLine(hdc, NumberRow, NumberRow + m_scrollPos);
 		
 		// Цикл по байтам в строке
-		for (int NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
+		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
 		{
 			State = m_fileCommander->getByte(m_numberOfArea, numberOfByte, Byte);
 			
@@ -149,12 +154,14 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 				break;
 
 			case ByteEqual:
+
 				SetTextColor(hdc, m_baseTextColor);
 				charOfByte = Byte <= 31 ? '.' : Byte;
 				ByteToHexString(Byte, stringOfByte);
 				break;
 
 			case ByteNotEqual:
+
 				SetTextColor(hdc, TEXT_COLOR_SELECT);
 				charOfByte = Byte <= 31 ? '.' : Byte;
 				ByteToHexString(Byte, stringOfByte);
@@ -163,6 +170,7 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 			default:
 				break;
 			}
+
 			// Отрисовка байта
 			PaintByte(hdc, NumberRow, NumbOfByteInRow, stringOfByte, charOfByte);
 
@@ -206,8 +214,7 @@ void AreaOfFile::setSize(RECT client)
 		WIDTH_SCROLLBAR, m_rectData.bottom - m_rectData.top,
 		0);
 
-	UpdateNumberOfRow();
-
+	// Изменение размера шрифта в соответствии с размером
 	UpdateFont();
 
 	// Обновление данных в для ScrollBar
@@ -222,47 +229,50 @@ void AreaOfFile::setFont(HFONT hFont)
 */
 
 
-HWND AreaOfFile::getButton()
+HWND AreaOfFile::GetButton()
 {
 	return m_hButton;
 }
 
-HWND AreaOfFile::getEdit()
+HWND AreaOfFile::GetEdit()
 {
 	return m_hEdit;
 }
 
-HWND AreaOfFile::getScrollBar()
+HWND AreaOfFile::GetScrollBar()
 {
 	return m_hScrollBar;
 }
 
 
-int AreaOfFile::getCountOfVisibleRows()
+INT AreaOfFile::GetCountOfVisibleRows()
 {
 	return m_countOfVisibleRows;
 }
 
-void AreaOfFile::setDateOfScroll(INT64 countRows, double ratioOfScroll, int maxScrollPos)
+void AreaOfFile::SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos)
 {
 	m_ratioOfScroll = ratioOfScroll;
 	m_maxScrollPos = maxScrollPos;
 	m_countRows = countRows;
 
 	UpdateNumberOfRow();
+	UpdateFont();
+	UpdateScrollInfo();
 }
 
 void AreaOfFile::Scroll(INT64 scrollInc)
 {
 	m_scrollPos += scrollInc;
 	ScrollWindowEx(m_hWnd, 0, -m_heightChar * scrollInc, &m_rectData, &m_rectData, NULL, NULL, SW_INVALIDATE);
-	SetScrollPos(m_hWnd, SB_VERT, m_scrollPos / m_ratioOfScroll + 0.5, true);
+	SetScrollPos(m_hScrollBar, SB_CTL, m_scrollPos / m_ratioOfScroll + 0.5, true);
+
 	UpdateWindow(m_hWnd);
 }
 
 
 
-void AreaOfFile::PaintNumberLine(HDC hdc, int numberLine, INT64 numberLineForView)
+void AreaOfFile::PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView)
 {
 	WCHAR			m_buffer[LENGTH_OF_BUFFER] = { 0 };
 	TextOutW(
@@ -275,10 +285,10 @@ void AreaOfFile::PaintNumberLine(HDC hdc, int numberLine, INT64 numberLineForVie
 }
 
 
-void AreaOfFile::PaintByte(HDC hdc, int numberLine, int numberByte, WCHAR stringOfByte[], char charOfByte)
+void AreaOfFile::PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte)
 {
 	// Смещение по Y
-	int y = m_rectData.top + INDENT_OF_TOP + numberLine * m_heightChar;
+	INT y = m_rectData.top + INDENT_OF_TOP + numberLine * m_heightChar;
 
 	// Отображение символа байта
 	TextOutA(
@@ -302,7 +312,6 @@ void AreaOfFile::PaintByte(HDC hdc, int numberLine, int numberByte, WCHAR string
 
 void AreaOfFile::UpdateScrollInfo()
 {
-	m_countOfVisibleRows = (m_rectData.bottom - m_rectData.top) / m_heightChar;
 
 	SCROLLINFO scrollInfo;
 	scrollInfo.cbSize = sizeof(scrollInfo);
@@ -346,18 +355,24 @@ void AreaOfFile::ByteToHexString(byte in, WCHAR out[])
 void AreaOfFile::UpdateFont()
 {
 
-	int CountCharsInRow = INDENT1 + INDENT2 + INDENT3 + m_lengthOfNumberRow +
+	INT CountCharsInRow = INDENT1 + INDENT2 + INDENT3 + m_lengthOfNumberRow +
 		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2) + LENGTH_OF_BYTE_STRINGS + INDENT4;
 
-	int WidthChar = (m_rectData.right - m_rectData.left) / CountCharsInRow;
+	INT WidthChar = (m_rectData.right - m_rectData.left) / CountCharsInRow;
+	INT HeightChar = (double )WidthChar / FONT_SIZE_RELATION + 0.5;
 
+	if (HeightChar > MAX_FONT_SIZE_HEIGHT)
+	{
+		WidthChar = MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION;
+		HeightChar = MAX_FONT_SIZE_HEIGHT;
+	}
 
 	HDC hdc = GetDC(m_hWnd);
 	if (!m_hFont)
 	{
 		DeleteObject(m_hFont);
 	}
-	m_hFont = CreateFontW(WidthChar / FONT_SIZE_RELATION + 0.5,
+	m_hFont = CreateFontW(HeightChar,
 		WidthChar,
 		0, 0,
 		FW_NORMAL,
@@ -379,16 +394,17 @@ void AreaOfFile::UpdateFont()
 
 	ReleaseDC(m_hWnd, hdc);
 
+	m_countOfVisibleRows = (m_rectData.bottom - m_rectData.top) / m_heightChar;
 }
 
 void AreaOfFile::UpdateNumberOfRow()
 {
+	INT64 CountRows = m_countRows;
 	m_lengthOfNumberRow = 1;
-	while ((m_countRows /= 16) != 0)
+	while ((CountRows /= 16) != 0)
 	{
 		m_lengthOfNumberRow++;
 	}
-	m_lengthOfNumberRow;
 	wsprintfW(m_format, L"%%0%dlX:", m_lengthOfNumberRow);
 	m_lengthOfNumberRow++;	// Двоеточие
 	m_indentForBytes = m_rectData.left + m_widthChar * (INDENT1 + INDENT2 + m_lengthOfNumberRow);

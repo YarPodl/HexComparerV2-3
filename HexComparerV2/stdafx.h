@@ -12,7 +12,7 @@
 #define LENGTH_PATH 1024
 
 // Высота символа
-#define FONT_SIZE_HEIGHT 15
+#define MAX_FONT_SIZE_HEIGHT 15
 
 // Отношение ширины символа к его высоте
 #define FONT_SIZE_RELATION 0.4
@@ -24,9 +24,10 @@
 #define FONT_FAMILY L"Lucida Console"
 //#define FONT_FAMILY L"Times new Roman Cyr"
 //#define FONT_FAMILY L"Courier new"
-//#define FONT_FAMILY L"Times new Roman"
 //#define FONT_FAMILY L"Consolas"
 //#define FONT_FAMILY L"Symbol"
+
+
 
 // Расстояние между строк (в пикселях)
 #define INTERLACED_SPACE 4;

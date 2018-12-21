@@ -35,22 +35,22 @@ private:
 	INT64			countOfByte;
 
 	// Высота клиентской области окна
-	int				heightClient;
+	INT				heightClient;
 
 	// Ширина клиентской области окна
-	int				widthClient;
+	INT				widthClient;
 
 	// Минимальное значение количества видимых строк для всех областей
-	int				m_minCountOfVisibleRows = 0;
+	INT				m_minCountOfVisibleRows = 0;
 
 	// Соотношение между реальной позицией скроллинга и позицией бегунка
-	double			ratioOfScroll = 0;
+	double			m_ratioOfScroll = 0;
 
 	// Текущий шрифт
 	HFONT			hFont = NULL;
 
 	// Максимальная позиция бегунка
-	int				m_maxScrollPos;
+	INT				m_maxScrollPos;
 
 
 	void			СhangeEdit(LPARAM lParam);
@@ -67,11 +67,11 @@ public:
 	void			scrollLineUp();
 	void			scrollLineDown();
 	void			scrollPageUp(LPARAM lParam);
-	int				getCountOfVisibleRows(LPARAM lParam);
+	INT				getCountOfVisibleRows(LPARAM lParam);
 	void			scrollPageDown(LPARAM lParam);
 	void			scrollBegin();
 	void			scrollEnd();
 	void			scrollTo(LPARAM lParam);
-	bool			loadFile(int indexFile, LPCWSTR fileName);
+	bool			loadFile(INT indexFile, LPCWSTR fileName);
 };
 

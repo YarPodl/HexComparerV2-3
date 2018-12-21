@@ -34,7 +34,7 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 	return TRUE;
 }
 
-int MainWindow::Start(int nCmdShow)
+INT MainWindow::Start(INT nCmdShow)
 {
 	ShowWindow(m_hWnd, nCmdShow);
 	UpdateWindow(m_hWnd);
@@ -54,17 +54,18 @@ int MainWindow::Start(int nCmdShow)
 		DispatchMessage(&msg);
 	}
 
-	return (int)msg.wParam;
+	return (INT)msg.wParam;
 }
 
 LRESULT MainWindow::StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT lResult;
+
 	MainWindow *mainWindow = (MainWindow *)GetPropW(hWnd, THIS_PROP);
+	
 	if (!mainWindow)
-	{
 		return DefWindowProcW(hWnd, message, wParam, lParam);
-	}
+	
 
 	lResult = mainWindow->WndProc(hWnd, message, wParam, lParam);
 
@@ -108,12 +109,15 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_VSCROLL:
 		switch (LOWORD(wParam))
 		{
+
 		case SB_BOTTOM:
 			m_displayArea->scrollEnd();
 			break;
+
 		case SB_TOP:
 			m_displayArea->scrollBegin();
 			break;
+
 		case SB_LINEUP:
 			m_displayArea->scrollLineUp();
 			break;
@@ -144,12 +148,14 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 		return 0;
 	case WM_MOUSEWHEEL:
+
 		m_wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
 		for (; m_wheelDelta > WHEEL_DELTA; m_wheelDelta -= WHEEL_DELTA)
 			m_displayArea->scrollLineUp();
 		for (; m_wheelDelta < 0; m_wheelDelta += WHEEL_DELTA)
 			m_displayArea->scrollLineDown();
 		break;
+
 	case WM_KEYDOWN:
 		switch (wParam)
 		{
@@ -183,6 +189,7 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 		}
 		return 0;
+
 	case WM_GETMINMAXINFO:
 		pMinMaxInfo = (MINMAXINFO*)lParam;
 		pMinMaxInfo->ptMinTrackSize.x = MIN_WIDTH_WINDOW;

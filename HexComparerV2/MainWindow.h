@@ -7,7 +7,7 @@ class MainWindow
 public:
 
 	virtual		BOOL				Create(HINSTANCE hInstance);
-	virtual		int					Start(int nCmdShow);
+	virtual		INT					Start(INT nCmdShow);
 	static		LRESULT CALLBACK	StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:

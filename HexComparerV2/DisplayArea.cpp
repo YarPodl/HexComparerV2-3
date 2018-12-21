@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "DisplayArea.h"
 
-#define CALL_FOR_ALL_AREA(func) for (int i = 0; i < COUNT_OF_FILES; i++) { m_areasOfFiles[i].func; }
+#define CALL_FOR_ALL_AREA(func) for (INT i = 0; i < COUNT_OF_FILES; i++) { m_areasOfFiles[i].func; }
 
 
 DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
@@ -12,8 +12,8 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 	////////////////////////////
 
 	HDC hdc = GetDC(hWnd);
-	hFont = CreateFontW(FONT_SIZE_HEIGHT, 
-				FONT_SIZE_HEIGHT * FONT_SIZE_RELATION,
+	hFont = CreateFontW(MAX_FONT_SIZE_HEIGHT, 
+				MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION,
 				0, 0, 
 				FW_NORMAL, 
 				FALSE, FALSE, FALSE,
@@ -21,8 +21,8 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 				OUT_DEFAULT_PRECIS,
 				CLIP_DEFAULT_PRECIS,		
 				DEFAULT_QUALITY, 
-				FIXED_PITCH | FF_MODERN, 
-				FONT_FAMILY);
+				FF_MODERN, 
+				L"Times new Roman");
 
 	SelectObject(hdc, hFont);
 
@@ -33,9 +33,9 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 	////////////////////////////////
 
 	// Цикл прохода по областям
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].Initialize(i, hWnd, hInst, &m_fileCommander);
+		m_areasOfFiles[i].Initialize(i, hWnd, hInst, hFont, &m_fileCommander);
 	}
 }
 
@@ -46,7 +46,7 @@ void DisplayArea::SetSizeAreaOfFile()
 	RECT ClientRectFileArea = { 0 };
 
 	// Цикл прохода по областям
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
 		ClientRectFileArea.top		= 0;
 		ClientRectFileArea.left		= widthClient / COUNT_OF_FILES * i;	
@@ -54,6 +54,9 @@ void DisplayArea::SetSizeAreaOfFile()
 		ClientRectFileArea.bottom	= heightClient;
 		
 		m_areasOfFiles[i].setSize(ClientRectFileArea);
+		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
+
+		
 	}
 }
 
@@ -65,18 +68,19 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 	widthClient = LOWORD(lParam);
 
 	SetSizeAreaOfFile();
+
+	m_scrollInc = 0;
 	Scroll();
 
 	// Минимальное количество видимых строк 
-	m_minCountOfVisibleRows = m_areasOfFiles[0].getCountOfVisibleRows();
+	m_minCountOfVisibleRows = m_areasOfFiles[0].GetCountOfVisibleRows();
 
 	// Цикл прохода по областям и поиска минимального значения для областей
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].Scroll(m_scrollInc);
-		if (m_minCountOfVisibleRows > m_areasOfFiles[i].getCountOfVisibleRows())
+		if (m_minCountOfVisibleRows > m_areasOfFiles[i].GetCountOfVisibleRows())
 		{
-			m_minCountOfVisibleRows = m_areasOfFiles[i].getCountOfVisibleRows();
+			m_minCountOfVisibleRows = m_areasOfFiles[i].GetCountOfVisibleRows();
 		}
 	}
 	
@@ -105,7 +109,7 @@ void DisplayArea::Command(WPARAM wParam, LPARAM lParam)
 void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 {
 	// Цикл прохода по областям
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
 		m_areasOfFiles[i].Paint(hdc, ps);
 	}
@@ -152,21 +156,26 @@ void DisplayArea::scrollEnd()
 
 void DisplayArea::scrollTo(LPARAM lParam)
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		if (m_areasOfFiles[i].getScrollBar() == (HWND)lParam)
+		if (m_areasOfFiles[i].GetScrollBar() == (HWND)lParam)
 		{
-			SCROLLINFO scrollInfo;
-			scrollInfo.fMask = SIF_TRACKPOS;
-			GetScrollInfo((HWND)lParam, SB_CTL, &scrollInfo);
+			SCROLLINFO ScrollInfo;
+			ScrollInfo.cbSize = sizeof(ScrollInfo);
+			ScrollInfo.fMask = SIF_TRACKPOS;
+			if (!GetScrollInfo((HWND)lParam, SB_CTL, &ScrollInfo))
+			{
+				INT t = GetLastError();
+				t += 0;
+			}
 			//scrollPos = ratioOfScroll * scrollInfo.nTrackPos + 0.5;
-			if (scrollInfo.nTrackPos + m_areasOfFiles[i].getCountOfVisibleRows() >= m_maxScrollPos)
+			if (ScrollInfo.nTrackPos + m_areasOfFiles[i].GetCountOfVisibleRows() >= m_maxScrollPos)
 			{
 				scrollEnd();
 			}
 			else
 			{
-				m_scrollInc = ratioOfScroll * scrollInfo.nTrackPos - scrollPos;
+				m_scrollInc = m_ratioOfScroll * ScrollInfo.nTrackPos - scrollPos;
 				Scroll();
 				/*scrollPos = ratioOfScroll * scrollInfo.nTrackPos + 0.5;
 				if ((maxScrollPos < 1000) || (scrollPos % 2 == 0))
@@ -178,7 +187,7 @@ void DisplayArea::scrollTo(LPARAM lParam)
 	}
 }
 
-bool DisplayArea::loadFile(int indexFile, LPCWSTR fileName)
+bool DisplayArea::loadFile(INT indexFile, LPCWSTR fileName)
 {
 	if (!m_fileCommander.LoadFile(indexFile, fileName))
 	{
@@ -187,27 +196,27 @@ bool DisplayArea::loadFile(int indexFile, LPCWSTR fileName)
 	countOfByte = m_fileCommander.getMaxSize();
 	m_countRows = countOfByte / LENGTH_OF_BYTE_STRINGS + 1;
 	m_maxScrollPos = m_countRows > MAXINT ? MAXINT : m_countRows;
-	ratioOfScroll = m_countRows > MAXINT ? (double)m_countRows / m_maxScrollPos : 1;
+	m_ratioOfScroll = m_countRows > MAXINT ? (double)m_countRows / m_maxScrollPos : 1;
 
 	scrollPos = scrollPos > m_countRows ? m_maxScrollPos : scrollPos;
 
 
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].setDateOfScroll(m_countRows, ratioOfScroll, m_maxScrollPos);
+		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
 	}
 
 	return TRUE;
 }
 
 
-int DisplayArea::getCountOfVisibleRows(LPARAM lParam)
+INT DisplayArea::getCountOfVisibleRows(LPARAM lParam)
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		if (m_areasOfFiles[i].getScrollBar() == (HWND)lParam)
+		if (m_areasOfFiles[i].GetScrollBar() == (HWND)lParam)
 		{
-			return m_areasOfFiles[i].getCountOfVisibleRows();
+			return m_areasOfFiles[i].GetCountOfVisibleRows();
 		}
 	}
 
@@ -216,9 +225,9 @@ int DisplayArea::getCountOfVisibleRows(LPARAM lParam)
 
 void DisplayArea::СhangeEdit(LPARAM lParam)
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		if (m_areasOfFiles[i].getEdit() == (HWND)lParam)
+		if (m_areasOfFiles[i].GetEdit() == (HWND)lParam)
 		{
 			m_fileCommander.CloseFile(i);
 			InvalidateRect(hWnd, NULL, TRUE);
@@ -230,14 +239,14 @@ void DisplayArea::СhangeEdit(LPARAM lParam)
 
 void DisplayArea::СlickButton(LPARAM lParam)
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		if (m_areasOfFiles[i].getButton() == (HWND)lParam)
+		if (m_areasOfFiles[i].GetButton() == (HWND)lParam)
 		{
 			WCHAR buffer[LENGTH_PATH];
 			if (OpenFileDialog(buffer))
 			{
-				HWND edit = m_areasOfFiles[i].getEdit();
+				HWND edit = m_areasOfFiles[i].GetEdit();
 				SetWindowTextW(edit, buffer);
 				if (!loadFile(i, buffer))
 				{
@@ -272,10 +281,6 @@ bool DisplayArea::OpenFileDialog(LPWSTR fileName)
 
 void DisplayArea::Scroll()
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
-	{
-		m_areasOfFiles[i].Scroll(m_scrollInc);
-	}
 	m_scrollInc = max(
 		-scrollPos,
 		min(m_scrollInc, m_countRows - m_minCountOfVisibleRows - scrollPos)
@@ -283,7 +288,7 @@ void DisplayArea::Scroll()
 	if (m_scrollInc != 0)
 	{
 		scrollPos += m_scrollInc;
-		for (int i = 0; i < COUNT_OF_FILES; i++)
+		for (INT i = 0; i < COUNT_OF_FILES; i++)
 		{
 			m_areasOfFiles[i].Scroll(m_scrollInc);
 		}
@@ -292,7 +297,7 @@ void DisplayArea::Scroll()
 
 DisplayArea::~DisplayArea()
 {
-	for (int i = 0; i < COUNT_OF_FILES; i++)
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
 		m_fileCommander.CloseFile(i);
 	}
