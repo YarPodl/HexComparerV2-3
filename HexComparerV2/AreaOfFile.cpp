@@ -96,8 +96,10 @@ void AreaOfFile::CloseHandle()
 	}
 }
 
-void AreaOfFile::PaintDump(HDC hdc, PAINTSTRUCT & ps)
+void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 {
+	PaintBorder(hdc);
+
 	if (!m_pFileCommander->isLoadedFile(m_NumberOfArea))
 		return;
 
@@ -119,52 +121,68 @@ void AreaOfFile::PaintDump(HDC hdc, PAINTSTRUCT & ps)
 		LastPaintingRow = m_CountOfVisibleRows + 1;
 	}
 
+	// Ограничение на выход за пределы файла
+	if (LastPaintingRow > m_CountRows)
+	{
+		LastPaintingRow = m_CountRows + 1;
+	}
+
 	SelectObject(hdc, m_hFont);	// Шрифт
 
 	// Номер текущего байта от начала файла
-	INT64 numberOfByte = (FirstPaintingRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS;
+	INT64 NumberOfByte = (FirstPaintingRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS;
 
 	// Исходный цвет текста
-	COLORREF m_baseTextColor = GetTextColor(hdc);
+	COLORREF BaseTextColor = GetTextColor(hdc);
 
-	// Состояние байта
-	StateOfByte	State;
 	
-	BYTE	Byte							= 0;		// Значение
-	CHAR	charOfByte						= 0;		// Байт как символ	
-	WCHAR	stringOfByte[LENGTH_OF_BYTE]	= { 0 };	// Байт как Hex строка
+	StateOfByte	State;										// Состояние байта
+	BYTE		Byte							= 0;		// Значение
+	CHAR		CharOfByte						= 0;		// Байт как символ	
+	WCHAR		StringOfByte[LENGTH_OF_BYTE]	= { 0 };	// Байт как Hex строка
+	//BOOL		IsFileEnded						= FALSE;	// Закончился ли файл
 
 	// Цикл по строкам
 	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
 	{		
+		// Если файл закончился
+		if (NumberRow == m_CountRows)
+		{
+			RECT Rect = m_RectData;
+			Rect.top = m_RectData.top + m_HeightChar * NumberRow;
+			FillRect(hdc, &Rect, BACKGROUND_WINDOW);
+			break;
+		}
+
 		// Отображение номера строки
 		PaintNumberLine(hdc, NumberRow, (NumberRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS);
 		
 		// Цикл по байтам в строке
 		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
 		{
-			State = m_pFileCommander->getByte(m_NumberOfArea, numberOfByte, Byte);
+			State = m_pFileCommander->getByte(m_NumberOfArea, NumberOfByte, Byte);
 			
 			switch (State)
 			{
 			case FileEnded:
-				charOfByte = ' ';
-				stringOfByte[0] = L' ';
-				stringOfByte[1] = L' ';
+				CharOfByte = ' ';
+				StringOfByte[0] = L' ';
+				StringOfByte[1] = L' ';
+				//IsFileEnded = TRUE;
 				break;
 
 			case ByteEqual:
 
-				SetTextColor(hdc, m_baseTextColor);
-				charOfByte = Byte <= 31 ? '.' : Byte;
-				ByteToHexString(Byte, stringOfByte);
+				SetTextColor(hdc, BaseTextColor);
+				CharOfByte = Byte <= 31 ? '.' : Byte;
+				ByteToHexString(Byte, StringOfByte);
 				break;
 
 			case ByteNotEqual:
 
 				SetTextColor(hdc, TEXT_COLOR_SELECT);
-				charOfByte = Byte <= 31 ? '.' : Byte;
-				ByteToHexString(Byte, stringOfByte);
+				CharOfByte = Byte <= 31 ? '.' : Byte;
+				ByteToHexString(Byte, StringOfByte);
 				break;
 
 			default:
@@ -172,14 +190,14 @@ void AreaOfFile::PaintDump(HDC hdc, PAINTSTRUCT & ps)
 			}
 
 			// Отрисовка байта
-			PaintByte(hdc, NumberRow, NumbOfByteInRow, stringOfByte, charOfByte);
+			PaintByte(hdc, NumberRow, NumbOfByteInRow, StringOfByte, CharOfByte);
 
-			numberOfByte++;
+			NumberOfByte++;
 			
 		}
 
 		// Возврат исходного цвета
-		SetTextColor(hdc, m_baseTextColor);
+		SetTextColor(hdc, BaseTextColor);
 		
 	}
 
@@ -312,7 +330,7 @@ void AreaOfFile::OpenFile()
 }
 
 
-bool AreaOfFile::OpenFileDialog(LPWSTR fileName)
+BOOL AreaOfFile::OpenFileDialog(LPWSTR fileName)
 {
 	OPENFILENAMEW ofn;
 	ZeroMemory(fileName, LENGTH_PATH);
@@ -323,6 +341,15 @@ bool AreaOfFile::OpenFileDialog(LPWSTR fileName)
 	ofn.nMaxFile = LENGTH_PATH;
 	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	return GetOpenFileNameW(&ofn);
+}
+
+void AreaOfFile::PaintBorder(HDC hdc)
+{
+	MoveToEx(hdc, m_RectData.left, m_RectMenu.top, NULL);
+	LineTo(hdc, m_RectData.right, m_RectMenu.top);
+	LineTo(hdc, m_RectData.right, m_RectData.bottom);
+	LineTo(hdc, m_RectData.left, m_RectData.bottom);
+	LineTo(hdc, m_RectData.left, m_RectMenu.top);
 }
 
 
@@ -367,10 +394,19 @@ void AreaOfFile::PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR string
 
 void AreaOfFile::UpdateScrollInfo()
 {
-
 	SCROLLINFO scrollInfo;
-	scrollInfo.cbSize = sizeof(scrollInfo);
-	scrollInfo.nMin = 0;
+
+	scrollInfo.cbSize	= sizeof(scrollInfo);
+	scrollInfo.nMin		= 0;
+	scrollInfo.nMax		= m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
+	scrollInfo.nPage	= m_CountOfVisibleRows;
+	scrollInfo.fMask	= SIF_RANGE | SIF_PAGE;
+	if (m_ScrollPos > m_CountRows - m_CountOfVisibleRows)
+	{
+		m_ScrollPos			= 0;
+		scrollInfo.nPos		= 0;
+		scrollInfo.fMask	|= SIF_POS;
+	}
 	if (m_CountRows > m_CountOfVisibleRows)
 	{
 		scrollInfo.nMax = m_MaxScrollPos;
@@ -381,9 +417,6 @@ void AreaOfFile::UpdateScrollInfo()
 		scrollInfo.nMax = 0;
 		ShowScrollBar(m_hScrollBar, SB_CTL, FALSE);
 	}
-	scrollInfo.nMax = m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
-	scrollInfo.nPage = m_CountOfVisibleRows;//(int)(m_CountOfVisibleRows * m_RatioOfScroll + 0.5);
-	scrollInfo.fMask = SIF_RANGE | SIF_PAGE;
 
 	SetScrollInfo(m_hScrollBar, SB_CTL, &scrollInfo, TRUE);
 }
@@ -426,6 +459,7 @@ void AreaOfFile::UpdateFont()
 	if (!m_hFont)
 	{
 		DeleteObject(m_hFont);
+		m_hFont = NULL;
 	}
 	m_hFont = CreateFontW(HeightChar,
 		WidthChar,

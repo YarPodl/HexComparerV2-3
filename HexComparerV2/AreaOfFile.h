@@ -44,7 +44,8 @@ private:
 	void inline	ByteToHexString(byte in, WCHAR out[]);
 	void		UpdateFont();
 	void		UpdateNumberOfRow();
-	bool		OpenFileDialog(LPWSTR file);
+	BOOL		OpenFileDialog(LPWSTR file);
+	void		PaintBorder(HDC hdc);
 
 
 public:
@@ -53,7 +54,7 @@ public:
 
 	BOOL		Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander);
 	void		CloseHandle();
-	void		PaintDump(HDC hdc, PAINTSTRUCT &ps);
+	void		PaintArea(HDC hdc, PAINTSTRUCT &ps);
 
 	/// <summary>
 	/// Устанавливает новый размер области

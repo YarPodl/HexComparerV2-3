@@ -42,21 +42,41 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 
 void DisplayArea::SetSizeAreaOfFile()
 {
-	// Координаты одной области файла
-	RECT ClientRectFileArea = { 0 };
+	RECT ClientRectFileArea = { 0 };	// Координаты одной области файла
+	INT i;								// Переменная цикла
 
 	// Цикл прохода по областям
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	for (i = 0; i < COUNT_OF_FILES - 2; i++)
 	{
 		ClientRectFileArea.top		= 0;
-		ClientRectFileArea.left		= m_widthClient / COUNT_OF_FILES * i;	
-		ClientRectFileArea.right	= m_widthClient / COUNT_OF_FILES * (i + 1);
+		ClientRectFileArea.left		= m_widthClient / (COUNT_OF_FILES - 1) * i;	
+		ClientRectFileArea.right	= m_widthClient / (COUNT_OF_FILES - 1) * (i + 1);
 		ClientRectFileArea.bottom	= m_heightClient;
 		
 		m_areasOfFiles[i].setSize(ClientRectFileArea);
 		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
+	}
 
-		
+	// Размеры последних двух областей
+	if (COUNT_OF_FILES >= 2)
+	{
+		// Верхняя область
+		ClientRectFileArea.top = 0;
+		ClientRectFileArea.left = m_widthClient / (COUNT_OF_FILES - 1) * i;
+		ClientRectFileArea.right = m_widthClient / (COUNT_OF_FILES - 1) * (i + 1);
+		ClientRectFileArea.bottom = m_heightClient / 2;
+
+		m_areasOfFiles[i].setSize(ClientRectFileArea);
+		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
+
+		// Нижняя область
+		ClientRectFileArea.top = m_heightClient / 2;
+		ClientRectFileArea.left = m_widthClient / (COUNT_OF_FILES - 1) * i;
+		ClientRectFileArea.right = m_widthClient / (COUNT_OF_FILES - 1) * (i + 1);
+		ClientRectFileArea.bottom = m_heightClient;
+
+		m_areasOfFiles[i + 1].setSize(ClientRectFileArea);
+		m_areasOfFiles[i + 1].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
 	}
 }
 
@@ -166,7 +186,7 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 	// Цикл прохода по областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].PaintDump(hdc, ps);
+		m_areasOfFiles[i].PaintArea(hdc, ps);
 	}
 	SelectObject(hdc, m_hFont);
 }
@@ -205,7 +225,7 @@ void DisplayArea::scrollBegin()
 
 void DisplayArea::scrollEnd()
 {
-	m_scrollInc = m_countRows;
+	m_scrollInc = m_countRows - m_scrollPos - m_minCountOfVisibleRows;
 	Scroll();
 }
 

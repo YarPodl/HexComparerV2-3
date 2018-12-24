@@ -41,6 +41,8 @@
 // Начальная высота окна
 #define HEIGHT_WINDOW 600
 
+#define BACKGROUND_WINDOW (HBRUSH)(COLOR_WINDOW + 1)
+
 // Начальная ширина окна
 #define WIDTH_WINDOW 1050
 
