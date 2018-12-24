@@ -13,10 +13,10 @@ AreaOfFile::~AreaOfFile()
 
 BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander)
 {
-	m_numberOfArea = number;
+	m_NumberOfArea = number;
 	m_hWnd = hWnd;
 	m_hInst = hInst;
-	m_fileCommander = fileCommander;
+	m_pFileCommander = fileCommander;
 
 	// Удаление элементов (если существовали)
 	CloseHandle();
@@ -26,8 +26,8 @@ BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont,
 		L"edit",
 		L"",
 		WS_CHILD | WS_VISIBLE | WS_BORDER,
-		m_rectMenu.left, m_rectMenu.top,
-		m_rectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.left, m_RectMenu.top,
+		m_RectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Проверка успешности
@@ -43,7 +43,7 @@ BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont,
 		L"button",
 		L">>",
 		WS_CHILD | WS_VISIBLE,
-		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
+		m_RectMenu.left + m_RectMenu.right - WIDTH_BUTTONS, m_RectMenu.top,
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
@@ -58,8 +58,8 @@ BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont,
 		L"scrollbar",
 		NULL,
 		WS_CHILD | WS_VISIBLE | SBS_VERT,
-		m_rectMenu.left + m_rectMenu.right - WIDTH_BUTTONS, 
-		m_rectMenu.top,
+		m_RectMenu.left + m_RectMenu.right - WIDTH_BUTTONS, 
+		m_RectMenu.top,
 		WIDTH_BUTTONS, 
 		HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
@@ -96,9 +96,9 @@ void AreaOfFile::CloseHandle()
 	}
 }
 
-void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
+void AreaOfFile::PaintDump(HDC hdc, PAINTSTRUCT & ps)
 {
-	if (!m_fileCommander->isLoadedFile(m_numberOfArea))
+	if (!m_pFileCommander->isLoadedFile(m_NumberOfArea))
 		return;
 
 	
@@ -106,23 +106,23 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 	INT		LastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
 
 	// Вычисление рисуемых строк через не валидную область
-	FirstPaintingRow = (ps.rcPaint.top - m_rectData.top) / m_heightChar;
-	LastPaintingRow  = (ps.rcPaint.bottom - m_rectData.top) / m_heightChar + 1;
+	FirstPaintingRow = (ps.rcPaint.top - m_RectData.top) / m_HeightChar;
+	LastPaintingRow  = (ps.rcPaint.bottom - m_RectData.top) / m_HeightChar + 1;
 
 	// Ограничение на выход за пределы видимости
 	if (FirstPaintingRow < 0)
 	{
 		FirstPaintingRow = 0;
 	}
-	if (LastPaintingRow > m_countOfVisibleRows)
+	if (LastPaintingRow > m_CountOfVisibleRows)
 	{
-		LastPaintingRow = m_countOfVisibleRows + 1;
+		LastPaintingRow = m_CountOfVisibleRows + 1;
 	}
 
 	SelectObject(hdc, m_hFont);	// Шрифт
 
 	// Номер текущего байта от начала файла
-	INT64 numberOfByte = (FirstPaintingRow + m_scrollPos) * LENGTH_OF_BYTE_STRINGS;
+	INT64 numberOfByte = (FirstPaintingRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS;
 
 	// Исходный цвет текста
 	COLORREF m_baseTextColor = GetTextColor(hdc);
@@ -138,19 +138,19 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
 	{		
 		// Отображение номера строки
-		PaintNumberLine(hdc, NumberRow, NumberRow + m_scrollPos);
+		PaintNumberLine(hdc, NumberRow, (NumberRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS);
 		
 		// Цикл по байтам в строке
 		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
 		{
-			State = m_fileCommander->getByte(m_numberOfArea, numberOfByte, Byte);
+			State = m_pFileCommander->getByte(m_NumberOfArea, numberOfByte, Byte);
 			
 			switch (State)
 			{
 			case FileEnded:
 				charOfByte = ' ';
-				stringOfByte[0] = L'-';
-				stringOfByte[1] = L'-';
+				stringOfByte[0] = L' ';
+				stringOfByte[1] = L' ';
 				break;
 
 			case ByteEqual:
@@ -188,30 +188,30 @@ void AreaOfFile::Paint(HDC hdc, PAINTSTRUCT & ps)
 void AreaOfFile::setSize(RECT client)
 {
 	// Размер области с данными
-	m_rectData = client;
-	m_rectData.top = client.top + HEIGHT_MENU;
-	m_rectData.right = client.right - WIDTH_SCROLLBAR;
+	m_RectData = client;
+	m_RectData.top = client.top + HEIGHT_MENU;
+	m_RectData.right = client.right - WIDTH_SCROLLBAR;
 
 	// Размер меню
-	m_rectMenu = client;
-	m_rectMenu.bottom = client.top + HEIGHT_MENU;
+	m_RectMenu = client;
+	m_RectMenu.bottom = client.top + HEIGHT_MENU;
 
 	// Установка размера и позиции поля ввода
 	SetWindowPos(m_hEdit, HWND_BOTTOM,
-		m_rectMenu.left, m_rectMenu.top,
-		m_rectMenu.right - m_rectMenu.left - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.left, m_RectMenu.top,
+		m_RectMenu.right - m_RectMenu.left - WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		0);
 
 	// Установка размера и позиции кнопки
 	SetWindowPos(m_hButton, HWND_BOTTOM,
-		m_rectMenu.right - WIDTH_BUTTONS, m_rectMenu.top,
+		m_RectMenu.right - WIDTH_BUTTONS, m_RectMenu.top,
 		WIDTH_BUTTONS, HEIGHT_BUTTONS,
 		0);
 
 	// Установка размера и позиции ScrollBar
 	SetWindowPos(m_hScrollBar, HWND_BOTTOM,
-		m_rectData.right, m_rectData.top,
-		WIDTH_SCROLLBAR, m_rectData.bottom - m_rectData.top,
+		m_RectData.right, m_RectData.top,
+		WIDTH_SCROLLBAR, m_RectData.bottom - m_RectData.top,
 		0);
 
 	// Изменение размера шрифта в соответствии с размером
@@ -247,14 +247,14 @@ HWND AreaOfFile::GetScrollBar()
 
 INT AreaOfFile::GetCountOfVisibleRows()
 {
-	return m_countOfVisibleRows;
+	return m_CountOfVisibleRows;
 }
 
 void AreaOfFile::SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos)
 {
-	m_ratioOfScroll = ratioOfScroll;
-	m_maxScrollPos = maxScrollPos;
-	m_countRows = countRows;
+	m_RatioOfScroll = ratioOfScroll;
+	m_MaxScrollPos = maxScrollPos;
+	m_CountRows = countRows;
 
 	UpdateNumberOfRow();
 	UpdateFont();
@@ -263,24 +263,79 @@ void AreaOfFile::SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos
 
 void AreaOfFile::Scroll(INT64 scrollInc)
 {
-	m_scrollPos += scrollInc;
-	ScrollWindowEx(m_hWnd, 0, -m_heightChar * scrollInc, &m_rectData, &m_rectData, NULL, NULL, SW_INVALIDATE);
-	SetScrollPos(m_hScrollBar, SB_CTL, m_scrollPos / m_ratioOfScroll + 0.5, true);
+	m_ScrollPos += scrollInc;
+	ScrollWindowEx(m_hWnd, 0, -m_HeightChar * scrollInc, &m_RectData, &m_RectData, NULL, NULL, SW_INVALIDATE);
+	SetScrollPos(m_hScrollBar, SB_CTL, m_ScrollPos / m_RatioOfScroll + 0.5, true);
 
 	UpdateWindow(m_hWnd);
 }
 
 
 
+void AreaOfFile::СhangeEdit(LPARAM lParam)
+{
+	if (m_hEdit == (HWND)lParam)
+	{
+		m_pFileCommander->CloseFile(m_NumberOfArea);
+		InvalidateRect(m_hWnd, &m_RectData, TRUE);
+		UpdateWindow(m_hWnd);
+	}
+}
+
+void AreaOfFile::СlickButton(LPARAM lParam)
+{
+	if (m_hButton == (HWND)lParam)
+	{
+		WCHAR buffer[LENGTH_PATH];
+		if (OpenFileDialog(buffer))
+		{
+			SetWindowTextW(m_hEdit, buffer);
+			OpenFile();
+		}
+	}
+}
+
+void AreaOfFile::OpenFile()
+{
+	WCHAR buffer[LENGTH_PATH];
+	GetWindowTextW(m_hEdit, buffer, LENGTH_PATH);
+	if (!m_pFileCommander->LoadFile(m_NumberOfArea, buffer))
+	{
+		WCHAR message[LENGTH_PATH + MAX_SIZE_STRING];
+		message[0] = 0;
+		wcscat_s(message, L"Не удалось открыть файл ");
+		wcscat_s(message, buffer);
+		MessageBoxW(m_hWnd, message, L"", 0);
+	}
+	InvalidateRect(m_hWnd, &m_RectData, TRUE);
+	UpdateWindow(m_hWnd);
+}
+
+
+bool AreaOfFile::OpenFileDialog(LPWSTR fileName)
+{
+	OPENFILENAMEW ofn;
+	ZeroMemory(fileName, LENGTH_PATH);
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.hwndOwner = m_hWnd;
+	ofn.lpstrFile = fileName;
+	ofn.nMaxFile = LENGTH_PATH;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+	return GetOpenFileNameW(&ofn);
+}
+
+
 void AreaOfFile::PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView)
 {
 	WCHAR			m_buffer[LENGTH_OF_BUFFER] = { 0 };
+	wsprintfW(m_buffer, m_Format, numberLineForView);
 	TextOutW(
 		hdc,
-		m_rectData.left + m_widthChar * INDENT1,						// Смещение по X
-		m_rectData.top + INDENT_OF_TOP + numberLine * m_heightChar,	// Смещение по Y
+		m_RectData.left + m_WidthChar * INDENT1,						// Смещение по X
+		m_RectData.top + INDENT_OF_TOP + numberLine * m_HeightChar,	// Смещение по Y
 		m_buffer,													// Строка номера
-		wsprintfW(m_buffer, m_format, numberLineForView)				// Длина строки номера. Вычисление строки номера
+		wsprintfW(m_buffer, m_Format, numberLineForView)				// Длина строки номера. Вычисление строки номера
 	);
 }
 
@@ -288,12 +343,12 @@ void AreaOfFile::PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForVie
 void AreaOfFile::PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte)
 {
 	// Смещение по Y
-	INT y = m_rectData.top + INDENT_OF_TOP + numberLine * m_heightChar;
+	INT y = m_RectData.top + INDENT_OF_TOP + numberLine * m_HeightChar;
 
 	// Отображение символа байта
 	TextOutA(
 		hdc,
-		m_indentForLetters + m_widthChar * numberByte,
+		m_IndentForLetters + m_WidthChar * numberByte,
 		y,
 		(LPCSTR)&charOfByte,
 		1
@@ -302,7 +357,7 @@ void AreaOfFile::PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR string
 	// Отображение байта как Hex строки
 	TextOutW(
 		hdc,
-		m_indentForBytes + m_widthChar * (numberByte * (CharsForByte + INDENT_BETWEEN_BYTES2)),
+		m_IndentForBytes + m_WidthChar * (numberByte * (CharsForByte + INDENT_BETWEEN_BYTES2)),
 		y,
 		stringOfByte,
 		CharsForByte
@@ -316,9 +371,9 @@ void AreaOfFile::UpdateScrollInfo()
 	SCROLLINFO scrollInfo;
 	scrollInfo.cbSize = sizeof(scrollInfo);
 	scrollInfo.nMin = 0;
-	if (m_countRows > m_countOfVisibleRows)
+	if (m_CountRows > m_CountOfVisibleRows)
 	{
-		scrollInfo.nMax = m_maxScrollPos;
+		scrollInfo.nMax = m_MaxScrollPos;
 		ShowScrollBar(m_hScrollBar, SB_CTL, TRUE);
 	}
 	else
@@ -326,8 +381,8 @@ void AreaOfFile::UpdateScrollInfo()
 		scrollInfo.nMax = 0;
 		ShowScrollBar(m_hScrollBar, SB_CTL, FALSE);
 	}
-	scrollInfo.nMax = m_countRows > m_countOfVisibleRows ? m_maxScrollPos : 0;
-	scrollInfo.nPage = m_countOfVisibleRows;
+	scrollInfo.nMax = m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
+	scrollInfo.nPage = m_CountOfVisibleRows;//(int)(m_CountOfVisibleRows * m_RatioOfScroll + 0.5);
 	scrollInfo.fMask = SIF_RANGE | SIF_PAGE;
 
 	SetScrollInfo(m_hScrollBar, SB_CTL, &scrollInfo, TRUE);
@@ -355,10 +410,10 @@ void AreaOfFile::ByteToHexString(byte in, WCHAR out[])
 void AreaOfFile::UpdateFont()
 {
 
-	INT CountCharsInRow = INDENT1 + INDENT2 + INDENT3 + m_lengthOfNumberRow +
+	INT CountCharsInRow = INDENT1 + INDENT2 + INDENT3 + m_LengthOfNumberRow +
 		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2) + LENGTH_OF_BYTE_STRINGS + INDENT4;
 
-	INT WidthChar = (m_rectData.right - m_rectData.left) / CountCharsInRow;
+	INT WidthChar = (m_RectData.right - m_RectData.left) / CountCharsInRow;
 	INT HeightChar = (double )WidthChar / FONT_SIZE_RELATION + 0.5;
 
 	if (HeightChar > MAX_FONT_SIZE_HEIGHT)
@@ -389,26 +444,26 @@ void AreaOfFile::UpdateFont()
 	TEXTMETRICW tm;
 
 	GetTextMetricsW(hdc, &tm);
-	m_widthChar = tm.tmAveCharWidth;
-	m_heightChar = tm.tmHeight + tm.tmExternalLeading + INTERLACED_SPACE;
+	m_WidthChar = tm.tmAveCharWidth;
+	m_HeightChar = tm.tmHeight + tm.tmExternalLeading + INTERLACED_SPACE;
 
 	ReleaseDC(m_hWnd, hdc);
 
-	m_countOfVisibleRows = (m_rectData.bottom - m_rectData.top) / m_heightChar;
+	m_CountOfVisibleRows = (m_RectData.bottom - m_RectData.top) / m_HeightChar;
 }
 
 void AreaOfFile::UpdateNumberOfRow()
 {
-	INT64 CountRows = m_countRows;
-	m_lengthOfNumberRow = 1;
-	while ((CountRows /= 16) != 0)
+	INT64 CountBytes = m_CountRows * LENGTH_OF_BYTE_STRINGS;
+	m_LengthOfNumberRow = 1;
+	while ((CountBytes /= 16) != 0)
 	{
-		m_lengthOfNumberRow++;
+		m_LengthOfNumberRow++;
 	}
-	wsprintfW(m_format, L"%%0%dlX:", m_lengthOfNumberRow);
-	m_lengthOfNumberRow++;	// Двоеточие
-	m_indentForBytes = m_rectData.left + m_widthChar * (INDENT1 + INDENT2 + m_lengthOfNumberRow);
-	m_indentForLetters = m_rectData.left + m_widthChar * (INDENT1 + INDENT2 + INDENT3 + m_lengthOfNumberRow +
+	wsprintfW(m_Format, L"%%0%dIX:", m_LengthOfNumberRow);
+	m_LengthOfNumberRow++;	// Двоеточие
+	m_IndentForBytes = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + m_LengthOfNumberRow);
+	m_IndentForLetters = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + INDENT3 + m_LengthOfNumberRow +
 		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2));
 }
 

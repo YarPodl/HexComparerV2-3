@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 
-// Èìÿ ñâîéñòâà, ñîäåðæàùåãî îáúåêò êëàññà
-#define THIS_PROP L"this"
 
 
 BOOL MainWindow::Create(HINSTANCE hInstance)
@@ -20,7 +18,7 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 	m_displayArea = new DisplayArea(m_hWnd, m_hInst);
 
 	// Âðåìåííî
-	if (!m_displayArea->loadFile(0, L"D:\\Work\\Ìèíèìóì\\HexComparerV1\\HexComparerV1\\HexComparerV1.vcxproj"))
+	if (!m_displayArea->loadFile(0, L"F:\\Íîâàÿ ïàïêà\\t1"))
 	{
 		MessageBoxW(m_hWnd, L"ÎØÈÁÊÀ ÎÒÊÐÛÒÈß ÔÀÉËÀ dotnetfx35", L"", 0);
 	}
@@ -29,7 +27,6 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 		MessageBoxW(m_hWnd, L"ÎØÈÁÊÀ ÎÒÊÐÛÒÈß ÔÀÉËÀ dotnetfx351", L"", 0);
 	}*/
 
-	SetPropW(m_hWnd, THIS_PROP, this);
 
 	return TRUE;
 }
@@ -39,19 +36,18 @@ INT MainWindow::Start(INT nCmdShow)
 	ShowWindow(m_hWnd, nCmdShow);
 	UpdateWindow(m_hWnd);
 
-	//HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
+	HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
 	MSG msg;
 
 	// Main message loop:
 	while (GetMessage(&msg, nullptr, 0, 0) > 0)
 	{
-		/*if (!TranslateAccelerator(hWnd, hAccelTabel, msg))
+		if (!TranslateAccelerator(m_hWnd, hAccelTabel, & msg))
 		{
-
-		}*/
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	return (INT)msg.wParam;
@@ -61,7 +57,16 @@ LRESULT MainWindow::StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 {
 	LRESULT lResult;
 
-	MainWindow *mainWindow = (MainWindow *)GetPropW(hWnd, THIS_PROP);
+
+	if (message == WM_NCCREATE)
+	{
+		MDICREATESTRUCT * pMDIC = (MDICREATESTRUCT *)((LPCREATESTRUCT)lParam)->lpCreateParams;
+		MainWindow * mainWindow = (MainWindow *)(pMDIC->lParam);
+		SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)mainWindow);
+	}
+
+	//MainWindow *mainWindow = (MainWindow *)GetPropW(hWnd, THIS_PROP);
+	MainWindow *mainWindow = (MainWindow *)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 	
 	if (!mainWindow)
 		return DefWindowProcW(hWnd, message, wParam, lParam);
@@ -69,19 +74,13 @@ LRESULT MainWindow::StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 
 	lResult = mainWindow->WndProc(hWnd, message, wParam, lParam);
 
-	if (message == WM_DESTROY)
-	{
-		RemovePropW(hWnd, THIS_PROP);
-	}
-
 	return lResult;
 }
 
 LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	MINMAXINFO*	pMinMaxInfo		= NULL;
-
-	m_wheelDelta = 0;
+	INT			WheelDelta		= 0;
 
 	switch (message)
 	{
@@ -92,7 +91,6 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		return 0;
 
 	case WM_COMMAND:
-
 		//
 		m_displayArea->Command(wParam, lParam);
 		return 0;
@@ -107,52 +105,14 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	break;
 
 	case WM_VSCROLL:
-		switch (LOWORD(wParam))
-		{
-
-		case SB_BOTTOM:
-			m_displayArea->scrollEnd();
-			break;
-
-		case SB_TOP:
-			m_displayArea->scrollBegin();
-			break;
-
-		case SB_LINEUP:
-			m_displayArea->scrollLineUp();
-			break;
-
-		case SB_LINEDOWN:
-			m_displayArea->scrollLineDown();
-			break;
-
-		case SB_PAGEUP:
-			m_displayArea->scrollPageUp(lParam);
-			break;
-
-		case SB_PAGEDOWN:
-			m_displayArea->scrollPageDown(lParam);
-			break;
-
-		case SB_THUMBTRACK:
-			m_displayArea->scrollTo(lParam);
-			break;
-
-		case SB_THUMBPOSITION:
-			m_displayArea->scrollTo(lParam);
-			break;
-
-		default:
-			break;
-		}
-
+		m_displayArea->Scroll(wParam, lParam);
 		return 0;
 	case WM_MOUSEWHEEL:
 
-		m_wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
-		for (; m_wheelDelta > WHEEL_DELTA; m_wheelDelta -= WHEEL_DELTA)
+		WheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		for (; WheelDelta > 0; WheelDelta -= WHEEL_DELTA)
 			m_displayArea->scrollLineUp();
-		for (; m_wheelDelta < 0; m_wheelDelta += WHEEL_DELTA)
+		for (; WheelDelta < 0; WheelDelta += WHEEL_DELTA)
 			m_displayArea->scrollLineDown();
 		break;
 
@@ -229,13 +189,17 @@ ATOM MainWindow::RegisterMyClass(HINSTANCE hInstance)
 
 BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 {
+	MDICREATESTRUCT MdiStruct;
+	memset(&MdiStruct, 0, sizeof(MdiStruct));
+	MdiStruct.lParam = (LPARAM)this;
+
 	m_hWnd = CreateWindowW(
 		WINDOWCLASS,
 		(LPCWSTR)TITLE,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0,
 		WIDTH_WINDOW, HEIGHT_WINDOW,
-		nullptr, nullptr, hInstance, nullptr);
+		nullptr, nullptr, hInstance, & MdiStruct);
 
 	if (!m_hWnd)
 	{

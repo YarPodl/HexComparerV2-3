@@ -15,7 +15,6 @@ private:
 	HINSTANCE		m_hInst			= { 0 };
 	HWND			m_hWnd			= { 0 };
 	DisplayArea*	m_displayArea	= NULL;
-	short			m_wheelDelta	= 0;
 
 protected:
 

@@ -30,19 +30,19 @@
 
 
 // Расстояние между строк (в пикселях)
-#define INTERLACED_SPACE 4;
+#define INTERLACED_SPACE 2;
 
 // Количество байтов, отображаемых на одной строке
 #define LENGTH_OF_BYTE_STRINGS 8
 
 // Количество сравниваемых файлов
-#define COUNT_OF_FILES 2
+#define COUNT_OF_FILES 3
 
 // Начальная высота окна
-#define HEIGHT_WINDOW 300
+#define HEIGHT_WINDOW 600
 
 // Начальная ширина окна
-#define WIDTH_WINDOW 600
+#define WIDTH_WINDOW 1000
 
 // Минимальная высота окна
 #define MIN_HEIGHT_WINDOW 150
@@ -84,7 +84,7 @@
 #define INDENT_BETWEEN_LETTERS3 0
 
 // Заголовок окна программы
-#define TITLE L"Сравнение файлов"
+#define TITLE "Сравнение файлов"
 
 // Класс окна программы
 #define WINDOWCLASS L"HexComparerV2"

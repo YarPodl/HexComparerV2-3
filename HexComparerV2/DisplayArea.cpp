@@ -86,24 +86,55 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 	
 }
 
-void DisplayArea::Command(WPARAM wParam, LPARAM lParam)
+LRESULT DisplayArea::Command(WPARAM wParam, LPARAM lParam)
 {
 	switch (HIWORD(wParam))
 	{
 
 	// Нажатие кнопки
 	case BN_CLICKED:
-		СlickButton(lParam);
+		CALL_FOR_ALL_AREA(СlickButton(lParam));
 		break;
 
 	// Изменение поля
 	case EN_CHANGE:
-		СhangeEdit(lParam);
+		CALL_FOR_ALL_AREA(СhangeEdit(lParam));
 		break;
 
+	// Обработка клавиш акселераторов
+	case 1:
+		switch (LOWORD(wParam))
+		{
+		case ID_BEGIN:
+			scrollBegin();
+			break;
+		case ID_END:
+			scrollEnd();
+			break;
+		case ID_PAGEUP:
+			scrollPageUp(NULL);
+			break;
+		case ID_PAGEDOWN:
+			scrollPageDown(NULL);
+			break;
+		case ID_LINEUP:
+			scrollLineUp();
+			break;
+		case ID_LINEDOWN:
+			scrollLineDown();
+			break;
+		case ID_ENTER:
+			OpenFileFromEdit();
+			break;
+
+		default:
+			break;
+		}
 	default:
 		break;
 	}
+
+	return 0;
 }
 
 void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
@@ -111,7 +142,7 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 	// Цикл прохода по областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].Paint(hdc, ps);
+		m_areasOfFiles[i].PaintDump(hdc, ps);
 	}
 	SelectObject(hdc, hFont);
 }
@@ -130,14 +161,14 @@ void DisplayArea::scrollLineDown()
 
 void DisplayArea::scrollPageUp(LPARAM lParam)
 {
-	m_scrollInc -= getCountOfVisibleRows(lParam);
+	m_scrollInc = -getCountOfVisibleRows(lParam);
 	Scroll();
 }
 
 
 void DisplayArea::scrollPageDown(LPARAM lParam)
 {
-	m_scrollInc += getCountOfVisibleRows(lParam);
+	m_scrollInc = getCountOfVisibleRows(lParam);
 	Scroll();
 }
 
@@ -187,12 +218,55 @@ void DisplayArea::scrollTo(LPARAM lParam)
 	}
 }
 
+void DisplayArea::Scroll(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+
+	case SB_BOTTOM:
+		scrollEnd();
+		break;
+
+	case SB_TOP:
+		scrollBegin();
+		break;
+
+	case SB_LINEUP:
+		scrollLineUp();
+		break;
+
+	case SB_LINEDOWN:
+		scrollLineDown();
+		break;
+
+	case SB_PAGEUP:
+		scrollPageUp(lParam);
+		break;
+
+	case SB_PAGEDOWN:
+		scrollPageDown(lParam);
+		break;
+
+	case SB_THUMBTRACK:
+		scrollTo(lParam);
+		break;
+
+	case SB_THUMBPOSITION:
+		scrollTo(lParam);
+		break;
+
+	default:
+		break;
+	}
+}
+
 bool DisplayArea::loadFile(INT indexFile, LPCWSTR fileName)
 {
 	if (!m_fileCommander.LoadFile(indexFile, fileName))
 	{
 		return FALSE;
 	}
+
 	countOfByte = m_fileCommander.getMaxSize();
 	m_countRows = countOfByte / LENGTH_OF_BYTE_STRINGS + 1;
 	m_maxScrollPos = m_countRows > MAXINT ? MAXINT : m_countRows;
@@ -220,9 +294,9 @@ INT DisplayArea::getCountOfVisibleRows(LPARAM lParam)
 		}
 	}
 
-	return 0;
+	return m_minCountOfVisibleRows;
 }
-
+/*
 void DisplayArea::СhangeEdit(LPARAM lParam)
 {
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
@@ -264,18 +338,19 @@ void DisplayArea::СlickButton(LPARAM lParam)
 		}
 	}
 }
+*/
 
-bool DisplayArea::OpenFileDialog(LPWSTR fileName)
+bool DisplayArea::OpenFileFromEdit()
 {
-	OPENFILENAMEW ofn;
-	ZeroMemory(fileName, LENGTH_PATH);
-	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = hWnd; 
-	ofn.lpstrFile = fileName;
-	ofn.nMaxFile = LENGTH_PATH;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-	return GetOpenFileNameW(&ofn);
+	HWND FocusWindow = GetFocus();
+
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	{
+		if (m_areasOfFiles[i].GetEdit() == FocusWindow)
+		{
+			loadFile(i, )
+		}
+	}
 }
 
 

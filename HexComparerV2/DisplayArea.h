@@ -10,59 +10,85 @@
 class DisplayArea
 {
 private:
-	// Содержит объекты, отвечающие за области файлов
+	/// <summary>
+	/// Содержит объекты, отвечающие за области файлов
+	/// </summary>
 	AreaOfFile		m_areasOfFiles[COUNT_OF_FILES];
 
-	// Отвечает за файлы
+	/// <summary>
+	/// Отвечает за файлы
+	/// </summary>
 	FileCommander	m_fileCommander;
 
-	// Главное окно
+	/// <summary>
+	/// Главное окно
+	/// </summary>
 	HWND			hWnd;
-
-	// Главный контекст
+	 
+	/// <summary>
+	/// Главный контекст
+	/// </summary>
 	HINSTANCE		hInst;
 
-	// Общее количество строк
+	/// <summary>
+	/// Общее количество строк
+	/// </summary>
 	INT64			m_countRows;
 
-	// Позиция скроллинга (номер первой отображаемой строки)
+	/// <summary>
+	/// Позиция скроллинга (номер первой отображаемой строки)
+	/// </summary>
 	INT64			scrollPos;
-
-	// Количество прокручиваемых строк
+	
+	/// <summary>
+	/// Количество прокручиваемых строк
+	/// </summary>
 	INT64			m_scrollInc;
-
-	// Максимальное количество байт среди открытых файлов
+	 
+	/// <summary>
+	/// Максимальное количество байт среди открытых файлов
+	/// </summary>
 	INT64			countOfByte;
-
-	// Высота клиентской области окна
+	 
+	/// <summary>
+	/// Высота клиентской области окна
+	/// </summary>
 	INT				heightClient;
-
-	// Ширина клиентской области окна
+	 
+	/// <summary>
+	/// Ширина клиентской области окна
+	/// </summary>
 	INT				widthClient;
-
-	// Минимальное значение количества видимых строк для всех областей
+	 
+	/// <summary>
+	/// Минимальное значение количества видимых строк для всех областей
+	/// </summary>
 	INT				m_minCountOfVisibleRows = 0;
-
-	// Соотношение между реальной позицией скроллинга и позицией бегунка
+	 
+	/// <summary>
+	/// Соотношение между реальной позицией скроллинга и позицией бегунка
+	/// </summary>
 	double			m_ratioOfScroll = 0;
-
-	// Текущий шрифт
+	 
+	/// <summary>
+	/// Текущий шрифт
+	/// </summary>
 	HFONT			hFont = NULL;
-
-	// Максимальная позиция бегунка
+	 
+	/// <summary>
+	/// Максимальная позиция бегунка
+	/// </summary>
 	INT				m_maxScrollPos;
 
 
-	void			СhangeEdit(LPARAM lParam);
-	void			СlickButton(LPARAM lParam);
-	bool			OpenFileDialog(LPWSTR file);
+	bool			OpenFileFromEdit();
 	void			Scroll();
 	void			SetSizeAreaOfFile();
 public:
 					DisplayArea(HWND hWnd, HINSTANCE hInst);
 					~DisplayArea();
 	void			ChangeSize(LPARAM lParam);
-	void			Command(WPARAM wParam, LPARAM lParam);
+	LRESULT			Command(WPARAM wParam, LPARAM lParam);
 	void			Paint(HDC hdc, PAINTSTRUCT &ps);
 	void			scrollLineUp();
 	void			scrollLineDown();
@@ -72,6 +98,7 @@ public:
 	void			scrollBegin();
 	void			scrollEnd();
 	void			scrollTo(LPARAM lParam);
+	void			Scroll(WPARAM wParam, LPARAM lParam);
 	bool			loadFile(INT indexFile, LPCWSTR fileName);
 };
 
