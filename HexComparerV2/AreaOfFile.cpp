@@ -277,7 +277,7 @@ void AreaOfFile::ÑhangeEdit(LPARAM lParam)
 	if (m_hEdit == (HWND)lParam)
 	{
 		m_pFileCommander->CloseFile(m_NumberOfArea);
-		InvalidateRect(m_hWnd, &m_RectData, TRUE);
+		InvalidateRect(m_hWnd, NULL, TRUE);
 		UpdateWindow(m_hWnd);
 	}
 }
@@ -307,7 +307,7 @@ void AreaOfFile::OpenFile()
 		wcscat_s(message, buffer);
 		MessageBoxW(m_hWnd, message, L"", 0);
 	}
-	InvalidateRect(m_hWnd, &m_RectData, TRUE);
+	InvalidateRect(m_hWnd, NULL, TRUE);
 	UpdateWindow(m_hWnd);
 }
 

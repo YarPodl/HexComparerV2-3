@@ -6,13 +6,13 @@
 
 DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 {
-	this->hWnd = hWnd;
-	this->hInst = hInst;
+	this->m_hWnd = hWnd;
+	this->m_hInst = hInst;
 
 	////////////////////////////
 
 	HDC hdc = GetDC(hWnd);
-	hFont = CreateFontW(MAX_FONT_SIZE_HEIGHT, 
+	m_hFont = CreateFontW(MAX_FONT_SIZE_HEIGHT, 
 				MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION,
 				0, 0, 
 				FW_NORMAL, 
@@ -24,7 +24,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 				FF_MODERN, 
 				L"Times new Roman");
 
-	SelectObject(hdc, hFont);
+	SelectObject(hdc, m_hFont);
 
 
 	
@@ -35,7 +35,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 	// Цикл прохода по областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_areasOfFiles[i].Initialize(i, hWnd, hInst, hFont, &m_fileCommander);
+		m_areasOfFiles[i].Initialize(i, hWnd, hInst, m_hFont, &m_fileCommander);
 	}
 }
 
@@ -49,9 +49,9 @@ void DisplayArea::SetSizeAreaOfFile()
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
 		ClientRectFileArea.top		= 0;
-		ClientRectFileArea.left		= widthClient / COUNT_OF_FILES * i;	
-		ClientRectFileArea.right	= widthClient / COUNT_OF_FILES * (i + 1);
-		ClientRectFileArea.bottom	= heightClient;
+		ClientRectFileArea.left		= m_widthClient / COUNT_OF_FILES * i;	
+		ClientRectFileArea.right	= m_widthClient / COUNT_OF_FILES * (i + 1);
+		ClientRectFileArea.bottom	= m_heightClient;
 		
 		m_areasOfFiles[i].setSize(ClientRectFileArea);
 		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
@@ -60,12 +60,34 @@ void DisplayArea::SetSizeAreaOfFile()
 	}
 }
 
+void DisplayArea::UpdateData()
+{
+	INT64 CountOfBytes = m_fileCommander.getMaxSize();
+	if (CountOfBytes != m_countOfByte)
+	{
+		m_countOfByte = m_fileCommander.getMaxSize();
+		m_countRows = m_countOfByte / LENGTH_OF_BYTE_STRINGS + 1;
+		m_maxScrollPos = m_countRows > MAXINT ? MAXINT : m_countRows;
+		m_ratioOfScroll = m_countRows > MAXINT ? (double)m_countRows / m_maxScrollPos : 1;
+
+		m_scrollPos = m_scrollPos > m_countRows ? m_maxScrollPos : m_scrollPos;
+
+		for (INT i = 0; i < COUNT_OF_FILES; i++)
+		{
+			m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
+		}
+		
+		InvalidateRect(m_hWnd, NULL, TRUE);
+		UpdateWindow(m_hWnd);
+	}
+}
+
 
 void DisplayArea::ChangeSize(LPARAM lParam)
 {
 	// Сохранение новых размеров клиентской области
-	heightClient = HIWORD(lParam);
-	widthClient = LOWORD(lParam);
+	m_heightClient = HIWORD(lParam);
+	m_widthClient = LOWORD(lParam);
 
 	SetSizeAreaOfFile();
 
@@ -94,11 +116,13 @@ LRESULT DisplayArea::Command(WPARAM wParam, LPARAM lParam)
 	// Нажатие кнопки
 	case BN_CLICKED:
 		CALL_FOR_ALL_AREA(СlickButton(lParam));
+		UpdateData();
 		break;
 
 	// Изменение поля
 	case EN_CHANGE:
 		CALL_FOR_ALL_AREA(СhangeEdit(lParam));
+		UpdateData();
 		break;
 
 	// Обработка клавиш акселераторов
@@ -144,7 +168,7 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 	{
 		m_areasOfFiles[i].PaintDump(hdc, ps);
 	}
-	SelectObject(hdc, hFont);
+	SelectObject(hdc, m_hFont);
 }
 
 void DisplayArea::scrollLineUp()
@@ -174,14 +198,14 @@ void DisplayArea::scrollPageDown(LPARAM lParam)
 
 void DisplayArea::scrollBegin()
 {
-	m_scrollInc = -scrollPos;
+	m_scrollInc = -m_scrollPos;
 	Scroll();
 }
 
 
 void DisplayArea::scrollEnd()
 {
-	m_scrollInc = m_countRows - scrollPos - m_minCountOfVisibleRows;
+	m_scrollInc = m_countRows;
 	Scroll();
 }
 
@@ -206,7 +230,7 @@ void DisplayArea::scrollTo(LPARAM lParam)
 			}
 			else
 			{
-				m_scrollInc = m_ratioOfScroll * ScrollInfo.nTrackPos - scrollPos;
+				m_scrollInc = m_ratioOfScroll * ScrollInfo.nTrackPos - m_scrollPos;
 				Scroll();
 				/*scrollPos = ratioOfScroll * scrollInfo.nTrackPos + 0.5;
 				if ((maxScrollPos < 1000) || (scrollPos % 2 == 0))
@@ -267,18 +291,7 @@ bool DisplayArea::loadFile(INT indexFile, LPCWSTR fileName)
 		return FALSE;
 	}
 
-	countOfByte = m_fileCommander.getMaxSize();
-	m_countRows = countOfByte / LENGTH_OF_BYTE_STRINGS + 1;
-	m_maxScrollPos = m_countRows > MAXINT ? MAXINT : m_countRows;
-	m_ratioOfScroll = m_countRows > MAXINT ? (double)m_countRows / m_maxScrollPos : 1;
-
-	scrollPos = scrollPos > m_countRows ? m_maxScrollPos : scrollPos;
-
-
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		m_areasOfFiles[i].SetData(m_countRows, m_ratioOfScroll, m_maxScrollPos);
-	}
+	UpdateData();
 
 	return TRUE;
 }
@@ -296,49 +309,6 @@ INT DisplayArea::getCountOfVisibleRows(LPARAM lParam)
 
 	return m_minCountOfVisibleRows;
 }
-/*
-void DisplayArea::СhangeEdit(LPARAM lParam)
-{
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		if (m_areasOfFiles[i].GetEdit() == (HWND)lParam)
-		{
-			m_fileCommander.CloseFile(i);
-			InvalidateRect(hWnd, NULL, TRUE);
-			UpdateWindow(hWnd);
-			break;
-		}
-	}
-}
-
-void DisplayArea::СlickButton(LPARAM lParam)
-{
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		if (m_areasOfFiles[i].GetButton() == (HWND)lParam)
-		{
-			WCHAR buffer[LENGTH_PATH];
-			if (OpenFileDialog(buffer))
-			{
-				HWND edit = m_areasOfFiles[i].GetEdit();
-				SetWindowTextW(edit, buffer);
-				if (!loadFile(i, buffer))
-				{
-					WCHAR message[LENGTH_PATH + MAX_SIZE_STRING];
-					message[0] = 0;
-					wcscat_s(message, L"Не удалось открыть файл ");
-					wcscat_s(message, buffer);
-					MessageBoxW(hWnd, message, L"", 0);
-					return;
-				}
-				InvalidateRect(hWnd, NULL, TRUE);
-				UpdateWindow(hWnd);
-			}
-			break;
-		}
-	}
-}
-*/
 
 bool DisplayArea::OpenFileFromEdit()
 {
@@ -348,21 +318,25 @@ bool DisplayArea::OpenFileFromEdit()
 	{
 		if (m_areasOfFiles[i].GetEdit() == FocusWindow)
 		{
-			loadFile(i, )
+			m_areasOfFiles[i].OpenFile();
+			UpdateData();
+			return TRUE;
 		}
 	}
+
+	return FALSE;
 }
 
 
 void DisplayArea::Scroll()
 {
 	m_scrollInc = max(
-		-scrollPos,
-		min(m_scrollInc, m_countRows - m_minCountOfVisibleRows - scrollPos)
+		-m_scrollPos,
+		min(m_scrollInc, m_countRows - m_minCountOfVisibleRows - m_scrollPos)
 	);
 	if (m_scrollInc != 0)
 	{
-		scrollPos += m_scrollInc;
+		m_scrollPos += m_scrollInc;
 		for (INT i = 0; i < COUNT_OF_FILES; i++)
 		{
 			m_areasOfFiles[i].Scroll(m_scrollInc);

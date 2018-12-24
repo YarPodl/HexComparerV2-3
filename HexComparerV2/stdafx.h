@@ -15,7 +15,7 @@
 #define MAX_FONT_SIZE_HEIGHT 15
 
 // Отношение ширины символа к его высоте
-#define FONT_SIZE_RELATION 0.4
+#define FONT_SIZE_RELATION 0.45
 
 // Ширина символа
 //#define FONT_SIZE_WIDTH 6
@@ -42,7 +42,7 @@
 #define HEIGHT_WINDOW 600
 
 // Начальная ширина окна
-#define WIDTH_WINDOW 1000
+#define WIDTH_WINDOW 1050
 
 // Минимальная высота окна
 #define MIN_HEIGHT_WINDOW 150

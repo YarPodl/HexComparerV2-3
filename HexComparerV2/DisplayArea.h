@@ -23,12 +23,12 @@ private:
 	/// <summary>
 	/// Главное окно
 	/// </summary>
-	HWND			hWnd;
+	HWND			m_hWnd;
 	 
 	/// <summary>
 	/// Главный контекст
 	/// </summary>
-	HINSTANCE		hInst;
+	HINSTANCE		m_hInst;
 
 	/// <summary>
 	/// Общее количество строк
@@ -38,7 +38,7 @@ private:
 	/// <summary>
 	/// Позиция скроллинга (номер первой отображаемой строки)
 	/// </summary>
-	INT64			scrollPos;
+	INT64			m_scrollPos;
 	
 	/// <summary>
 	/// Количество прокручиваемых строк
@@ -48,17 +48,17 @@ private:
 	/// <summary>
 	/// Максимальное количество байт среди открытых файлов
 	/// </summary>
-	INT64			countOfByte;
+	INT64			m_countOfByte;
 	 
 	/// <summary>
 	/// Высота клиентской области окна
 	/// </summary>
-	INT				heightClient;
+	INT				m_heightClient;
 	 
 	/// <summary>
 	/// Ширина клиентской области окна
 	/// </summary>
-	INT				widthClient;
+	INT				m_widthClient;
 	 
 	/// <summary>
 	/// Минимальное значение количества видимых строк для всех областей
@@ -73,7 +73,7 @@ private:
 	/// <summary>
 	/// Текущий шрифт
 	/// </summary>
-	HFONT			hFont = NULL;
+	HFONT			m_hFont = NULL;
 	 
 	/// <summary>
 	/// Максимальная позиция бегунка
@@ -84,6 +84,8 @@ private:
 	bool			OpenFileFromEdit();
 	void			Scroll();
 	void			SetSizeAreaOfFile();
+	void			UpdateData();
+
 public:
 					DisplayArea(HWND hWnd, HINSTANCE hInst);
 					~DisplayArea();
