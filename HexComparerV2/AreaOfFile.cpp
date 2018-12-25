@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "AreaOfFile.h"
 
 
@@ -100,7 +101,7 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 {
 	PaintBorder(hdc);
 
-	if (!m_pFileCommander->isLoadedFile(m_NumberOfArea))
+	if (!m_pFileCommander->IsLoadedFile(m_NumberOfArea))
 		return;
 
 	
@@ -160,7 +161,7 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 		// Цикл по байтам в строке
 		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
 		{
-			State = m_pFileCommander->getByte(m_NumberOfArea, NumberOfByte, Byte);
+			State = m_pFileCommander->GetByte(m_NumberOfArea, NumberOfByte, Byte);
 			
 			switch (State)
 			{

@@ -7,199 +7,271 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 {
 	m_hInst = hInstance;
 
+	// Регистрация класса окна
 	RegisterMyClass(hInstance);
 
-	// Perform application initialization:
+	// Проверка успешности
 	if (!CreateMyWindow(hInstance))
 	{
 		return FALSE;
 	}
 
-	m_displayArea = new DisplayArea(m_hWnd, m_hInst);
-
-	// Временно
-	if (!m_displayArea->loadFile(0, L"F:\\Новая папка\\t1"))
-	{
-		MessageBoxW(m_hWnd, L"ОШИБКА ОТКРЫТИЯ ФАЙЛА dotnetfx35", L"", 0);
-	}
-	/*if (!m_displayArea->loadFile(1, L"C:\\Users\\user\\Documents\\dotnetfx351.exe"))
-	{
-		MessageBoxW(m_hWnd, L"ОШИБКА ОТКРЫТИЯ ФАЙЛА dotnetfx351", L"", 0);
-	}*/
-
+	m_pDisplayArea = new DisplayArea(m_hWnd, m_hInst);
 
 	return TRUE;
 }
 
 INT MainWindow::Start(INT nCmdShow)
 {
+	// Отображение окна
 	ShowWindow(m_hWnd, nCmdShow);
 	UpdateWindow(m_hWnd);
 
+	// Загрузка таблицы акселераторов
 	HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
-	MSG msg;
+	MSG Msg;	// Сообщение
 
-	// Main message loop:
-	while (GetMessage(&msg, nullptr, 0, 0) > 0)
+	// Главный цикл сообщений
+	while (GetMessage(&Msg, NULL, 0, 0) > 0)
 	{
-		if (!TranslateAccelerator(m_hWnd, hAccelTabel, & msg))
+		if (!TranslateAccelerator(m_hWnd, hAccelTabel, & Msg))
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+			TranslateMessage(&Msg);
+			DispatchMessage(&Msg);
 		}
 	}
 
-	return (INT)msg.wParam;
+	return (INT)Msg.wParam;
 }
 
 LRESULT MainWindow::StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT lResult;
+	LRESULT Result;	// Результата
 
-
+	// Если окно создается
 	if (message == WM_NCCREATE)
 	{
+		// Получение структуры с информацией
 		MDICREATESTRUCT * pMDIC = (MDICREATESTRUCT *)((LPCREATESTRUCT)lParam)->lpCreateParams;
+
+		// Получение из структуры адреса объекта MainWindow, который создал окно
 		MainWindow * mainWindow = (MainWindow *)(pMDIC->lParam);
+
+		// Сохранение адреса объекта MainWindow
 		SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)mainWindow);
 	}
 
-	//MainWindow *mainWindow = (MainWindow *)GetPropW(hWnd, THIS_PROP);
+	// Получение адреса объекта MainWindow, который создал окно
 	MainWindow *mainWindow = (MainWindow *)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 	
+	// Если получить не удалось
 	if (!mainWindow)
 		return DefWindowProcW(hWnd, message, wParam, lParam);
-	
 
-	lResult = mainWindow->WndProc(hWnd, message, wParam, lParam);
+	// Вызов оконной процедуры конкретного объекта
+	Result = mainWindow->WndProc(hWnd, message, wParam, lParam);
 
-	return lResult;
+	return Result;
 }
 
 LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	MINMAXINFO*	pMinMaxInfo		= NULL;
-	INT			WheelDelta		= 0;
+	MINMAXINFO*	pMinMaxInfo		= NULL;		// Минимальные размеры окна
 
 	switch (message)
 	{
+	// Изменение размера окна
 	case WM_SIZE:
-
-		// 
-		m_displayArea->ChangeSize(lParam);
+		m_pDisplayArea->ChangeSize(lParam);
 		return 0;
 
+	// Сообщение с кодом команды
 	case WM_COMMAND:
-		//
-		m_displayArea->Command(wParam, lParam);
+		switch (HIWORD(wParam))
+		{
+		// Нажатие кнопки
+		case BN_CLICKED:
+			m_pDisplayArea->СlickButton(lParam);
+			break;
+
+		// Изменение поля
+		case EN_CHANGE:
+			m_pDisplayArea->СhangeEdit(lParam);
+			break;
+
+		// Обработка клавиш акселераторов
+		case 1:
+			switch (LOWORD(wParam))
+			{
+			case ID_BEGIN:
+				m_pDisplayArea->ScrollBegin();
+				break;
+
+			case ID_END:
+				m_pDisplayArea->ScrollEnd();
+				break;
+
+			case ID_PAGEUP:
+				m_pDisplayArea->ScrollPageUp(NULL);
+				break;
+
+			case ID_PAGEDOWN:
+				m_pDisplayArea->ScrollPageDown(NULL);
+				break;
+
+			case ID_LINEUP:
+				m_pDisplayArea->ScrollLineUp();
+				break;
+
+			case ID_LINEDOWN:
+				m_pDisplayArea->ScrollLineDown();
+				break;
+
+			case ID_ENTER:
+				m_pDisplayArea->OpenFileFromEdit();
+				break;
+
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+
 		return 0;
 
+	// Перерисовка
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hWnd, &ps);
-		m_displayArea->Paint(hdc, ps);
+		m_pDisplayArea->Paint(hdc, ps);
 		EndPaint(hWnd, &ps);
 	}
 	break;
 
+	// Скролл
 	case WM_VSCROLL:
-		m_displayArea->Scroll(wParam, lParam);
+		Scroll(wParam, lParam);
 		return 0;
-	case WM_MOUSEWHEEL:
 
-		WheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-		for (; WheelDelta > 0; WheelDelta -= WHEEL_DELTA)
-			m_displayArea->scrollLineUp();
-		for (; WheelDelta < 0; WheelDelta += WHEEL_DELTA)
-			m_displayArea->scrollLineDown();
+	// Прокрутка колесика мыши
+	case WM_MOUSEWHEEL:
+		MouseWheel(wParam);
 		break;
 
-	case WM_KEYDOWN:
-		switch (wParam)
-		{
-		case VK_END:
-			m_displayArea->scrollEnd();
-			break;
-		case VK_HOME:
-			m_displayArea->scrollBegin();
-			break;
-		case VK_UP:
-			m_displayArea->scrollLineUp();
-			break;
-
-		case VK_DOWN:
-			m_displayArea->scrollLineDown();
-			break;
-
-		case VK_PRIOR:
-			m_displayArea->scrollPageUp(lParam);
-			break;
-
-		case VK_NEXT:
-			m_displayArea->scrollPageDown(lParam);
-			break;
-
-			/*case VK_RETURN:
-			m_displayArea->scrollPageDown();
-			break;*/
-
-		default:
-			break;
-		}
-		return 0;
-
+	// Ответ на запрос о минимальных размерах окна
 	case WM_GETMINMAXINFO:
 		pMinMaxInfo = (MINMAXINFO*)lParam;
 		pMinMaxInfo->ptMinTrackSize.x = MIN_WIDTH_WINDOW;
 		pMinMaxInfo->ptMinTrackSize.y = MIN_HEIGHT_WINDOW;
 		break;
-		/*case WM_ERASEBKGND:
-		break;*/
+
+	// Закрытие окна
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
+
 	return 0;
 }
 
+
+void MainWindow::MouseWheel(WPARAM wParam)
+{
+	INT WheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);	// Прокрутка колесика мыши
+
+	// Прокрутка вверх
+	for (; WheelDelta > 0; WheelDelta -= WHEEL_DELTA)
+		m_pDisplayArea->ScrollLineUp();
+
+	// Прокрутка вниз
+	for (; WheelDelta < 0; WheelDelta += WHEEL_DELTA)
+		m_pDisplayArea->ScrollLineDown();
+}
+
+
+void MainWindow::Scroll(WPARAM wParam, LPARAM lParam)
+{
+	switch (LOWORD(wParam))
+	{
+
+	case SB_BOTTOM:
+		m_pDisplayArea->ScrollEnd();
+		break;
+
+	case SB_TOP:
+		m_pDisplayArea->ScrollBegin();
+		break;
+
+	case SB_LINEUP:
+		m_pDisplayArea->ScrollLineUp();
+		break;
+
+	case SB_LINEDOWN:
+		m_pDisplayArea->ScrollLineDown();
+		break;
+
+	case SB_PAGEUP:
+		m_pDisplayArea->ScrollPageUp(lParam);
+		break;
+
+	case SB_PAGEDOWN:
+		m_pDisplayArea->ScrollPageDown(lParam);
+		break;
+
+	case SB_THUMBTRACK:
+		m_pDisplayArea->ScrollTo(lParam);
+		break;
+
+	default:
+		break;
+	}
+}
+
+
 ATOM MainWindow::RegisterMyClass(HINSTANCE hInstance)
 {
-	WNDCLASSEXW wcex;
+	WNDCLASSEXW Wcex;	// Данные о классе окна
 
-	wcex.cbSize = sizeof(WNDCLASSEX);
+	Wcex.cbSize = sizeof(WNDCLASSEX);
 
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = StaticWndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = LoadIcon(hInstance, NULL);
-	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	wcex.hbrBackground = BACKGROUND_WINDOW;
-	wcex.lpszMenuName = NULL;
-	wcex.lpszClassName = WINDOWCLASS;
-	wcex.hIconSm = LoadIcon(hInstance, NULL);
+	Wcex.style = CS_HREDRAW | CS_VREDRAW;
+	Wcex.lpfnWndProc = StaticWndProc;
+	Wcex.cbClsExtra = 0;
+	Wcex.cbWndExtra = 0;
+	Wcex.hInstance = hInstance;
+	Wcex.hIcon = LoadIcon(hInstance, NULL);
+	Wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	Wcex.hbrBackground = BACKGROUND_WINDOW;
+	Wcex.lpszMenuName = NULL;
+	Wcex.lpszClassName = WINDOWCLASS;
+	Wcex.hIconSm = LoadIcon(hInstance, NULL);
 
-	return RegisterClassExW(&wcex);
+	return RegisterClassExW(&Wcex);
 }
 
 BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 {
+	// Создание структуры, содержащей адрес объекта MainWindow
 	MDICREATESTRUCT MdiStruct;
 	memset(&MdiStruct, 0, sizeof(MdiStruct));
 	MdiStruct.lParam = (LPARAM)this;
 
+	// Создание окна
 	m_hWnd = CreateWindowW(
 		WINDOWCLASS,
 		(LPCWSTR)TITLE,
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0,
 		WIDTH_WINDOW, HEIGHT_WINDOW,
-		nullptr, nullptr, hInstance, & MdiStruct);
+		nullptr, nullptr, 
+		hInstance, 
+		& MdiStruct);
 
 	if (!m_hWnd)
 	{

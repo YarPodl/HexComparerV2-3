@@ -4,11 +4,6 @@
 
 
 
-FileMapping::FileMapping()
-{
-	m_sizeOfFile = -1;
-}
-
 BOOL FileMapping::OpenFile(LPCWSTR fileName)
 {
 	// Открытие файла
@@ -17,7 +12,9 @@ BOOL FileMapping::OpenFile(LPCWSTR fileName)
 				FILE_SHARE_READ | FILE_SHARE_WRITE, 
 				NULL, OPEN_EXISTING, 
 				FILE_ATTRIBUTE_NORMAL, NULL);
-	if (m_hFile == INVALID_HANDLE_VALUE)	// Проверка успешности
+
+	// Проверка успешности
+	if (m_hFile == INVALID_HANDLE_VALUE)	
 	{
 		return FALSE;
 	}
@@ -27,13 +24,17 @@ BOOL FileMapping::OpenFile(LPCWSTR fileName)
 				PAGE_READONLY, 
 				0, 0,
 				NULL);
-	if ((m_hFileMapping == INVALID_HANDLE_VALUE) || (m_hFileMapping == NULL))	// Проверка успешности
+
+	// Проверка успешности
+	if ((m_hFileMapping == INVALID_HANDLE_VALUE) || (m_hFileMapping == NULL))	
 	{
 		return FALSE;
 	}
 	
-	m_mapViewOfFile = MapViewOfFile(m_hFileMapping, FILE_MAP_READ, 0, 0, 0);
-	if (m_mapViewOfFile == NULL)	// Проверка успешности
+	// Создание отображения
+	m_pMapViewOfFile = MapViewOfFile(m_hFileMapping, FILE_MAP_READ, 0, 0, 0);
+	// Проверка успешности
+	if (m_pMapViewOfFile == NULL)	
 	{
 		return FALSE;
 	}
@@ -41,7 +42,7 @@ BOOL FileMapping::OpenFile(LPCWSTR fileName)
 	// Получение размера файла
 	LARGE_INTEGER FileSize = { 0 };
 	GetFileSizeEx(m_hFile, &FileSize);
-	m_sizeOfFile = FileSize.QuadPart;
+	m_SizeOfFile = FileSize.QuadPart;
 
 	return TRUE;
 }
@@ -49,32 +50,32 @@ BOOL FileMapping::OpenFile(LPCWSTR fileName)
 BOOL FileMapping::getByte(INT64 numberOfByte, OUT BYTE & Byte)
 {
 	// Кончился ли файл
-	if (numberOfByte >= m_sizeOfFile)
+	if (numberOfByte >= m_SizeOfFile)
 	{
 		return FALSE;
 	}
 
 	// Чтение байта
-	Byte = ((byte*)m_mapViewOfFile)[numberOfByte];
+	Byte = ((byte*)m_pMapViewOfFile)[numberOfByte];
 
 	return TRUE;
 }
 
 INT64 FileMapping::getSizeOfFile()
 {
-	return m_sizeOfFile;
+	return m_SizeOfFile;
 }
 
 void FileMapping::CloseFile()
 {
 	// Обнуление 
-	m_sizeOfFile = -1;
+	m_SizeOfFile = -1;
 
 	// Закрытие отображения
-	if (m_mapViewOfFile != NULL)
+	if (m_pMapViewOfFile != NULL)
 	{
-		UnmapViewOfFile(m_mapViewOfFile);
-		m_mapViewOfFile = NULL;
+		UnmapViewOfFile(m_pMapViewOfFile);
+		m_pMapViewOfFile = NULL;
 	}
 
 	// Закрытие маппинга
