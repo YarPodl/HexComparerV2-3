@@ -3,17 +3,9 @@
 
 
 
-AreaOfFile::AreaOfFile()
-{
-}
-
-
-AreaOfFile::~AreaOfFile()
-{
-}
-
 BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander)
 {
+	// Запоминание значений
 	m_NumberOfArea = number;
 	m_hWnd = hWnd;
 	m_hInst = hInst;
@@ -76,6 +68,7 @@ BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont,
 	return TRUE;
 }
 
+
 void AreaOfFile::CloseHandle()
 {
 	if (m_hEdit)
@@ -97,10 +90,13 @@ void AreaOfFile::CloseHandle()
 	}
 }
 
+
 void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 {
+	// Рисование рамки
 	PaintBorder(hdc);
 
+	// Проверка загружен ли файл
 	if (!m_pFileCommander->IsLoadedFile(m_NumberOfArea))
 		return;
 
@@ -122,13 +118,8 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 		LastPaintingRow = m_CountOfVisibleRows + 1;
 	}
 
-	// Ограничение на выход за пределы файла
-	if (LastPaintingRow > m_CountRows)
-	{
-		LastPaintingRow = m_CountRows + 1;
-	}
-
-	SelectObject(hdc, m_hFont);	// Шрифт
+	// Шрифт
+	SelectObject(hdc, m_hFont);	
 
 	// Номер текущего байта от начала файла
 	INT64 NumberOfByte = (FirstPaintingRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS;
@@ -141,17 +132,20 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 	BYTE		Byte							= 0;		// Значение
 	CHAR		CharOfByte						= 0;		// Байт как символ	
 	WCHAR		StringOfByte[LENGTH_OF_BYTE]	= { 0 };	// Байт как Hex строка
-	//BOOL		IsFileEnded						= FALSE;	// Закончился ли файл
 
 	// Цикл по строкам
 	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
 	{		
-		// Если файл закончился
-		if (NumberRow == m_CountRows)
+		// Если все файлы закончились
+		if (NumberRow >= m_CountRows)
 		{
+			// Область после окончания самого длинного файла
 			RECT Rect = m_RectData;
 			Rect.top = m_RectData.top + m_HeightChar * NumberRow;
+
+			// Заливка области
 			FillRect(hdc, &Rect, BACKGROUND_WINDOW);
+
 			break;
 		}
 
@@ -161,24 +155,27 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 		// Цикл по байтам в строке
 		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
 		{
+			// Получение байта и его состояния 
 			State = m_pFileCommander->GetByte(m_NumberOfArea, NumberOfByte, Byte);
 			
+			// В зависимости от состояния байта
 			switch (State)
 			{
+			// Отобразить пробелы, если файл кончился
 			case FileEnded:
 				CharOfByte = ' ';
 				StringOfByte[0] = L' ';
 				StringOfByte[1] = L' ';
-				//IsFileEnded = TRUE;
 				break;
 
+			// Отобразить байт базовым цветом, если байты равны
 			case ByteEqual:
-
 				SetTextColor(hdc, BaseTextColor);
 				CharOfByte = Byte <= 31 ? '.' : Byte;
 				ByteToHexString(Byte, StringOfByte);
 				break;
 
+			// Отобразить байт выделенным цветом, если байты не равны
 			case ByteNotEqual:
 
 				SetTextColor(hdc, TEXT_COLOR_SELECT);
@@ -240,23 +237,18 @@ void AreaOfFile::setSize(RECT client)
 	UpdateScrollInfo();
 }
 
-/*
-void AreaOfFile::setFont(HFONT hFont)
-{
-	SendMessageW(m_hEdit, WM_SETFONT, (WPARAM)hFont, 1);
-}
-*/
-
 
 HWND AreaOfFile::GetButton()
 {
 	return m_hButton;
 }
 
+
 HWND AreaOfFile::GetEdit()
 {
 	return m_hEdit;
 }
+
 
 HWND AreaOfFile::GetScrollBar()
 {
@@ -269,63 +261,80 @@ INT AreaOfFile::GetCountOfVisibleRows()
 	return m_CountOfVisibleRows;
 }
 
+
 void AreaOfFile::SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos)
 {
-	m_RatioOfScroll = ratioOfScroll;
-	m_MaxScrollPos = maxScrollPos;
-	m_CountRows = countRows;
+	m_RatioOfScroll		= ratioOfScroll;
+	m_MaxScrollPos		= maxScrollPos;
+	m_CountRows			= countRows;
 
 	UpdateNumberOfRow();
 	UpdateFont();
 	UpdateScrollInfo();
 }
 
+
 void AreaOfFile::Scroll(INT64 scrollInc)
 {
+	// Новая позиция скролла
 	m_ScrollPos += scrollInc;
+
+	// Прокрутка изображения
 	ScrollWindowEx(m_hWnd, 0, -m_HeightChar * scrollInc, &m_RectData, &m_RectData, NULL, NULL, SW_INVALIDATE);
+
+	// Позиция бегунка
 	SetScrollPos(m_hScrollBar, SB_CTL, m_ScrollPos / m_RatioOfScroll + 0.5, true);
 
+	// Перерисовка
 	UpdateWindow(m_hWnd);
 }
 
 
 
-void AreaOfFile::СhangeEdit(LPARAM lParam)
+void AreaOfFile::СhangeEdit(HWND hEdit)
 {
-	if (m_hEdit == (HWND)lParam)
+	if (m_hEdit == hEdit)
 	{
 		m_pFileCommander->CloseFile(m_NumberOfArea);
-		InvalidateRect(m_hWnd, NULL, TRUE);
-		UpdateWindow(m_hWnd);
 	}
 }
 
-void AreaOfFile::СlickButton(LPARAM lParam)
+
+void AreaOfFile::СlickButton(HWND hButton)
 {
-	if (m_hButton == (HWND)lParam)
+	if (m_hButton == hButton)
 	{
 		WCHAR buffer[LENGTH_PATH];
 		if (OpenFileDialog(buffer))
 		{
 			SetWindowTextW(m_hEdit, buffer);
+
 			OpenFile();
 		}
 	}
 }
 
+
 void AreaOfFile::OpenFile()
 {
-	WCHAR buffer[LENGTH_PATH];
+	WCHAR	buffer[LENGTH_PATH]		= { 0 };	// Буфер для хранения пути к файлу
+
+	// Получение пути из edit
 	GetWindowTextW(m_hEdit, buffer, LENGTH_PATH);
+
+	// Загрузка файла
 	if (!m_pFileCommander->LoadFile(m_NumberOfArea, buffer))
 	{
-		WCHAR message[LENGTH_PATH + MAX_SIZE_STRING];
-		message[0] = 0;
+		WCHAR	message[LENGTH_PATH + MAX_SIZE_STRING] = { 0 };	// Буфер для хранения сообщения пользователю
+
+		// Формирование сообщения
 		wcscat_s(message, L"Не удалось открыть файл ");
 		wcscat_s(message, buffer);
+
 		MessageBoxW(m_hWnd, message, L"", 0);
 	}
+
+	// Перерисовка
 	InvalidateRect(m_hWnd, NULL, TRUE);
 	UpdateWindow(m_hWnd);
 }
@@ -333,20 +342,24 @@ void AreaOfFile::OpenFile()
 
 BOOL AreaOfFile::OpenFileDialog(LPWSTR fileName)
 {
-	OPENFILENAMEW ofn;
+	OPENFILENAMEW	ofn;
+
 	ZeroMemory(fileName, LENGTH_PATH);
 	ZeroMemory(&ofn, sizeof(ofn));
-	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = m_hWnd;
-	ofn.lpstrFile = fileName;
-	ofn.nMaxFile = LENGTH_PATH;
-	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+	ofn.lStructSize		= sizeof(OPENFILENAME);						// Размер структуры
+	ofn.hwndOwner		= m_hWnd;									// Окно родитель
+	ofn.lpstrFile		= fileName;									// Имя файла
+	ofn.nMaxFile		= LENGTH_PATH;								// Максимальная длина пути
+	ofn.Flags			= OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;	// Флаги
+
 	return GetOpenFileNameW(&ofn);
 }
 
 void AreaOfFile::PaintBorder(HDC hdc)
 {
 	MoveToEx(hdc, m_RectData.left, m_RectMenu.top, NULL);
+
 	LineTo(hdc, m_RectData.right, m_RectMenu.top);
 	LineTo(hdc, m_RectData.right, m_RectData.bottom);
 	LineTo(hdc, m_RectData.left, m_RectData.bottom);
@@ -356,13 +369,16 @@ void AreaOfFile::PaintBorder(HDC hdc)
 
 void AreaOfFile::PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView)
 {
-	WCHAR			m_buffer[LENGTH_OF_BUFFER] = { 0 };
+	WCHAR			m_buffer[LENGTH_OF_BUFFER]	= { 0 };	// Буфер для номера строки
+
+	// Заполнение буфера
 	wsprintfW(m_buffer, m_Format, numberLineForView);
+
 	TextOutW(
 		hdc,
 		m_RectData.left + m_WidthChar * INDENT1,						// Смещение по X
-		m_RectData.top + INDENT_OF_TOP + numberLine * m_HeightChar,	// Смещение по Y
-		m_buffer,													// Строка номера
+		m_RectData.top + INDENT_OF_TOP + numberLine * m_HeightChar,		// Смещение по Y
+		m_buffer,														// Строка номера
 		wsprintfW(m_buffer, m_Format, numberLineForView)				// Длина строки номера. Вычисление строки номера
 	);
 }
@@ -395,27 +411,31 @@ void AreaOfFile::PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR string
 
 void AreaOfFile::UpdateScrollInfo()
 {
-	SCROLLINFO scrollInfo;
+	SCROLLINFO scrollInfo;		// Информация о скролле
 
 	scrollInfo.cbSize	= sizeof(scrollInfo);
 	scrollInfo.nMin		= 0;
 	scrollInfo.nMax		= m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
-	scrollInfo.nPage	= m_CountOfVisibleRows;
+	scrollInfo.nPage	= m_CountOfVisibleRows;				// Возможно стоит сделать равным еденице
 	scrollInfo.fMask	= SIF_RANGE | SIF_PAGE;
+
+	// Если текущая позиция скролла вышла за пределы, вернуть ее в начало
 	if (m_ScrollPos > m_CountRows - m_CountOfVisibleRows)
 	{
 		m_ScrollPos			= 0;
 		scrollInfo.nPos		= 0;
 		scrollInfo.fMask	|= SIF_POS;
 	}
+
+	// Если строки помещаются на экране
 	if (m_CountRows > m_CountOfVisibleRows)
 	{
-		scrollInfo.nMax = m_MaxScrollPos;
+		scrollInfo.nMax		= m_MaxScrollPos;
 		ShowScrollBar(m_hScrollBar, SB_CTL, TRUE);
 	}
 	else
 	{
-		scrollInfo.nMax = 0;
+		scrollInfo.nMax		= 0;
 		ShowScrollBar(m_hScrollBar, SB_CTL, FALSE);
 	}
 
@@ -424,11 +444,13 @@ void AreaOfFile::UpdateScrollInfo()
 
 
 
-void AreaOfFile::ByteToHexString(byte in, WCHAR out[])
+void inline AreaOfFile::ByteToHexString(byte in, OUT WCHAR out[])
 {
-	out[0] = (in >> 4) + L'0';
-	out[1] = (in & 0x0F) + L'0';
-	out[2] = 0;
+	out[0] = (in >> 4) + L'0';		// Символ старшей части шестнадцатеричного числа
+	out[1] = (in & 0x0F) + L'0';	// Символ младшей части шестнадцатеричного числа
+	out[2] = 0;						// Конец строки
+
+	// Если часть числа > 0x9, исправление символа на A,B,C..F
 	if (out[0] > L'9')
 	{
 		out[0] = (out[0] - L'9' + L'A' - 1);
@@ -443,26 +465,33 @@ void AreaOfFile::ByteToHexString(byte in, WCHAR out[])
 
 void AreaOfFile::UpdateFont()
 {
-
+	// Количество символов в одной строке
 	INT CountCharsInRow = INDENT1 + INDENT2 + INDENT3 + m_LengthOfNumberRow +
 		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2) + LENGTH_OF_BYTE_STRINGS + INDENT4;
 
+	// Ширина символа, необходимая, чтобы поместились все символы
 	INT WidthChar = (m_RectData.right - m_RectData.left) / CountCharsInRow;
-	INT HeightChar = (double )WidthChar / FONT_SIZE_RELATION + 0.5;
 
+	// Высота символа, соответствующая ширине
+	INT HeightChar = (INT)((double)WidthChar / FONT_SIZE_RELATION + 0.5);
+
+	// Если высота больше максимальной
 	if (HeightChar > MAX_FONT_SIZE_HEIGHT)
 	{
-		WidthChar = MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION;
+		WidthChar = (INT)(MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION);
 		HeightChar = MAX_FONT_SIZE_HEIGHT;
 	}
 
-	HDC hdc = GetDC(m_hWnd);
-	if (!m_hFont)
+	// Удаление старого шрифта
+	if (m_hFont)
 	{
 		DeleteObject(m_hFont);
 		m_hFont = NULL;
 	}
-	m_hFont = CreateFontW(HeightChar,
+
+	// Создание нового с вычисленными размерами
+	m_hFont = CreateFontW(
+		HeightChar,				
 		WidthChar,
 		0, 0,
 		FW_NORMAL,
@@ -474,31 +503,47 @@ void AreaOfFile::UpdateFont()
 		FIXED_PITCH | FF_MODERN,
 		FONT_FAMILY);
 
+	HDC hdc = GetDC(m_hWnd);
+
 	SelectObject(hdc, m_hFont);
 
-	TEXTMETRICW tm;
+	TEXTMETRICW		tm;		// Содержит метрики шрифта 
 
+	// Получение метрик
 	GetTextMetricsW(hdc, &tm);
+
+	// Запоминание метрик
 	m_WidthChar = tm.tmAveCharWidth;
 	m_HeightChar = tm.tmHeight + tm.tmExternalLeading + INTERLACED_SPACE;
 
 	ReleaseDC(m_hWnd, hdc);
 
+	// Вычисление количества видимых строк
 	m_CountOfVisibleRows = (m_RectData.bottom - m_RectData.top) / m_HeightChar;
+	
+	// Вычисление значений для последующего использования
+	m_IndentForBytes = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + m_LengthOfNumberRow);
+	m_IndentForLetters = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + INDENT3 + m_LengthOfNumberRow +
+		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2));
 }
+
 
 void AreaOfFile::UpdateNumberOfRow()
 {
+	// Максимальное количество байт
 	INT64 CountBytes = m_CountRows * LENGTH_OF_BYTE_STRINGS;
+
+	// Вычисление длины строки с номером
 	m_LengthOfNumberRow = 1;
 	while ((CountBytes /= 16) != 0)
 	{
 		m_LengthOfNumberRow++;
 	}
+
+	// Формирование строки формата для отображение номера строки
 	wsprintfW(m_Format, L"%%0%dIX:", m_LengthOfNumberRow);
-	m_LengthOfNumberRow++;	// Двоеточие
-	m_IndentForBytes = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + m_LengthOfNumberRow);
-	m_IndentForLetters = m_RectData.left + m_WidthChar * (INDENT1 + INDENT2 + INDENT3 + m_LengthOfNumberRow +
-		LENGTH_OF_BYTE_STRINGS * (CharsForByte + INDENT_BETWEEN_BYTES2));
+
+	// Учет двоеточия после номера
+	m_LengthOfNumberRow++;	
 }
 

@@ -58,30 +58,27 @@ void DisplayArea::SetSizeAreaOfFile()
 
 void DisplayArea::UpdateData()
 {
-	INT64 CountOfBytes = m_FileCommander.GetMaxSize();	// Максимальное количество байт в файлах
+	// Присвоить новое максимальное количество байт
+	m_CountOfByte = m_FileCommander.GetMaxSize();
 
-	// Если поменялось
-	if (CountOfBytes != m_CountOfByte)
+	// Перевычислить все параметры
+	m_CountRows = m_CountOfByte / LENGTH_OF_BYTE_STRINGS + 1;
+	m_CountRows = m_CountOfByte == 0 ? 0 : m_CountRows;
+	m_MaxScrollPos = m_CountRows > MAXINT ? MAXINT : m_CountRows;
+	m_RatioOfScroll = m_CountRows > MAXINT ? (double)m_CountRows / m_MaxScrollPos : 1;
+	m_ScrollPos = m_ScrollPos > m_CountRows ? m_MaxScrollPos : m_ScrollPos;
+
+	// Передать новые параметры всем областям
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		// Присвоить новое
-		m_CountOfByte = m_FileCommander.GetMaxSize();
-
-		// Перевычислить все параметры
-		m_CountRows = m_CountOfByte / LENGTH_OF_BYTE_STRINGS + 1;
-		m_MaxScrollPos = m_CountRows > MAXINT ? MAXINT : m_CountRows;
-		m_RatioOfScroll = m_CountRows > MAXINT ? (double)m_CountRows / m_MaxScrollPos : 1;
-		m_ScrollPos = m_ScrollPos > m_CountRows ? m_MaxScrollPos : m_ScrollPos;
-
-		// Передать новые параметры всем областям
-		for (INT i = 0; i < COUNT_OF_FILES; i++)
-		{
-			m_AreasOfFiles[i].SetData(m_CountRows, m_RatioOfScroll, m_MaxScrollPos);
-		}
-		
-		// Перерисовать все
-		InvalidateRect(m_hWnd, NULL, TRUE);
-		UpdateWindow(m_hWnd);
+		m_AreasOfFiles[i].SetData(m_CountRows, m_RatioOfScroll, m_MaxScrollPos);
 	}
+		
+	// Перерисовать все
+	InvalidateRect(m_hWnd, NULL, TRUE);
+	UpdateWindow(m_hWnd);
+
+	UpdateMinCountOfVisibleRows();
 }
 
 
@@ -99,17 +96,7 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 	Scroll();
 
 	// Минимальное количество видимых строк 
-	m_MinCountOfVisibleRows = m_AreasOfFiles[0].GetCountOfVisibleRows();
-
-	// Цикл прохода по областям и поиска минимального значения для областей
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		if (m_MinCountOfVisibleRows > m_AreasOfFiles[i].GetCountOfVisibleRows())
-		{
-			m_MinCountOfVisibleRows = m_AreasOfFiles[i].GetCountOfVisibleRows();
-		}
-	}
-	
+	UpdateMinCountOfVisibleRows();
 }
 
 
@@ -207,6 +194,30 @@ INT DisplayArea::GetCountOfVisibleRows(LPARAM lParam)
 	return m_MinCountOfVisibleRows;
 }
 
+void DisplayArea::UpdateMinCountOfVisibleRows()
+{
+	// Минимальное количество видимых строк 
+	INT MinCountOfVisibleRows = MAXINT;
+
+	// Цикл прохода по областям и поиска минимального значения для областей
+	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	{
+		// Учитываются только области имеющие загруженный файл
+		if ((m_FileCommander.IsLoadedFile(i)) && (MinCountOfVisibleRows > m_AreasOfFiles[i].GetCountOfVisibleRows()))
+		{
+			MinCountOfVisibleRows = m_AreasOfFiles[i].GetCountOfVisibleRows();
+		}
+	}
+
+	// Если ни один файл не загружен
+	if (MinCountOfVisibleRows == MAXINT)
+	{
+		MinCountOfVisibleRows = m_AreasOfFiles[0].GetCountOfVisibleRows();
+	}
+
+	m_MinCountOfVisibleRows = MinCountOfVisibleRows;
+}
+
 
 bool DisplayArea::OpenFileFromEdit()
 {
@@ -231,16 +242,16 @@ bool DisplayArea::OpenFileFromEdit()
 }
 
 
-void DisplayArea::СhangeEdit(LPARAM lParam)
+void DisplayArea::СhangeEdit(HWND hEdit)
 {
-	CALL_FOR_ALL_AREA(СlickButton(lParam));
+	CALL_FOR_ALL_AREA(СhangeEdit(hEdit));
 	UpdateData();
 }
 
 
-void DisplayArea::СlickButton(LPARAM lParam)
+void DisplayArea::СlickButton(HWND hButton)
 {
-	CALL_FOR_ALL_AREA(СhangeEdit(lParam));
+	CALL_FOR_ALL_AREA(СlickButton(hButton));
 	UpdateData();
 }
 

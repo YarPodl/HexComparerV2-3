@@ -55,6 +55,11 @@ BOOL FileMapping::getByte(INT64 numberOfByte, OUT BYTE & Byte)
 		return FALSE;
 	}
 
+	if ((numberOfByte < m_BeginPage) || (numberOfByte >= m_BeginPage + PAGE_OF_MAPPING))
+	{
+
+	}
+
 	// Чтение байта
 	Byte = ((byte*)m_pMapViewOfFile)[numberOfByte];
 

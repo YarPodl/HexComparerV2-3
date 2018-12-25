@@ -161,10 +161,15 @@ public:
 	void			ScrollTo(LPARAM lParam);
 	
 	/// <summary>
-	/// Возвращает количество видимых строк
+	/// Возвращает количество видимых строк у области, которой принадлежит скроллбар
 	/// </summary>
 	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
 	INT				GetCountOfVisibleRows(LPARAM lParam);
+
+	/// <summary>
+	/// Вычисляет минимальное количество видимых строк для областей
+	/// </summary>
+	void			UpdateMinCountOfVisibleRows();
 
 	/// <summary>
 	/// Открывает файл по пути из edit, который находится в фокусе ввода
@@ -175,13 +180,13 @@ public:
 	/// <summary>
 	/// Закрывает файл для переданного edit
 	/// </summary>
-	/// <param name="lParam">Содержит дескритор поля ввода, которое было изменено</param>
-	void			СhangeEdit(LPARAM lParam);
+	/// <param name="hEdit">Содержит дескритор поля ввода, которое было изменено</param>
+	void			СhangeEdit(HWND hEdit);
 
 	/// <summary>
 	/// Открывает диалог открытия файла
 	/// </summary>
-	/// <param name="lParam">Содержит дескритор нажатой кнопки</param>
-	void			СlickButton(LPARAM lParam);
+	/// <param name="hButton">Содержит дескритор нажатой кнопки</param>
+	void			СlickButton(HWND hButton);
 };
 

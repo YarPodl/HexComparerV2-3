@@ -12,10 +12,10 @@
 #define LENGTH_PATH 1024
 
 // Высота символа
-#define MAX_FONT_SIZE_HEIGHT 15
+#define MAX_FONT_SIZE_HEIGHT 16
 
 // Отношение ширины символа к его высоте
-#define FONT_SIZE_RELATION 0.45
+#define FONT_SIZE_RELATION 0.5
 
 // Ширина символа
 //#define FONT_SIZE_WIDTH 6
@@ -23,6 +23,7 @@
 // Шрифт
 #define FONT_FAMILY L"Lucida Console"
 //#define FONT_FAMILY L"Times new Roman Cyr"
+//#define FONT_FAMILY L"Times new Roman"
 //#define FONT_FAMILY L"Courier new"
 //#define FONT_FAMILY L"Consolas"
 //#define FONT_FAMILY L"Symbol"
@@ -90,3 +91,5 @@
 
 // Класс окна программы
 #define WINDOWCLASS L"HexComparerV2"
+
+#define PAGE_OF_MAPPING 1 << 15

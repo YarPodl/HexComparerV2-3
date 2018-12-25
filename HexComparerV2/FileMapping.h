@@ -27,6 +27,11 @@ private:
 	/// </summary>
 	INT64		m_SizeOfFile		=	-1;
 
+	/// <summary>
+	/// Ќачало текущей страницы отображени€
+	/// </summary>
+	INT64		m_BeginPage			=	0;
+
 public:
 
 	/// <summary>

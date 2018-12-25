@@ -92,12 +92,12 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 		// Íàæàòèå êíîïêè
 		case BN_CLICKED:
-			m_pDisplayArea->ÑlickButton(lParam);
+			m_pDisplayArea->ÑlickButton((HWND)lParam);
 			break;
 
 		// Èçìåíåíèå ïîëÿ
 		case EN_CHANGE:
-			m_pDisplayArea->ÑhangeEdit(lParam);
+			m_pDisplayArea->ÑhangeEdit((HWND)lParam);
 			break;
 
 		// Îáðàáîòêà êëàâèø àêñåëåðàòîðîâ
@@ -225,6 +225,10 @@ void MainWindow::Scroll(WPARAM wParam, LPARAM lParam)
 		break;
 
 	case SB_THUMBTRACK:
+		m_pDisplayArea->ScrollTo(lParam);
+		break;
+
+	case SB_THUMBPOSITION:
 		m_pDisplayArea->ScrollTo(lParam);
 		break;
 
