@@ -4,6 +4,7 @@
 #include "AreaOfFile.h"
 #include "FileCommander.h"
 
+
 /// <summary>
 /// Координирует работу всех элементов клиентской области
 /// </summary>
@@ -32,19 +33,9 @@ private:
 	HINSTANCE		m_hInst				= NULL;
 
 	/// <summary>
-	/// Общее количество строк
+	/// Содержит общие данные о скролле
 	/// </summary>
-	INT64			m_CountRows			= 0;
-
-	/// <summary>
-	/// Позиция скроллинга (номер первой отображаемой строки)
-	/// </summary>
-	INT64			m_ScrollPos			= 0;
-	
-	/// <summary>
-	/// Количество прокручиваемых строк
-	/// </summary>
-	INT64			m_ScrollInc			= 0;
+	DataOfScroll	m_DataOfScroll		= { 0 };
 	 
 	/// <summary>
 	/// Максимальное количество байт среди открытых файлов
@@ -67,19 +58,9 @@ private:
 	INT				m_MinCountOfVisibleRows = 0;
 	 
 	/// <summary>
-	/// Соотношение между реальной позицией скроллинга и позицией бегунка
-	/// </summary>
-	double			m_RatioOfScroll		= 0;
-	 
-	/// <summary>
 	/// Текущий шрифт
 	/// </summary>
 	HFONT			m_hFont				= NULL;
-	 
-	/// <summary>
-	/// Максимальная позиция бегунка
-	/// </summary>
-	INT				m_MaxScrollPos		= 0;
 
 	/// <summary>
 	/// Скроллинг, согласно значению m_ScrollInc

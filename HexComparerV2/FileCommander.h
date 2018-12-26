@@ -5,7 +5,7 @@
 /// <summary>
 /// Состояния байтов
 /// </summary>
-typedef enum StateOfByte
+enum StateOfByte
 {
 	FileNtLoaded,		// Файл не загружен
 	FileEnded,			// Файл закончился

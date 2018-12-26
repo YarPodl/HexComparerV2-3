@@ -3,13 +3,18 @@
 
 
 
-BOOL AreaOfFile::Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander)
+BOOL AreaOfFile::Initialize(
+			INT number, HWND hWnd, HINSTANCE hInst, 
+			HFONT hFont, 
+			FileCommander * fileCommander, 
+			DataOfScroll * dateOfScroll)
 {
 	// Запоминание значений
-	m_NumberOfArea = number;
-	m_hWnd = hWnd;
-	m_hInst = hInst;
-	m_pFileCommander = fileCommander;
+	m_NumberOfArea		= number;
+	m_hWnd				= hWnd;
+	m_hInst				= hInst;
+	m_pFileCommander	= fileCommander;
+	m_pDataOfScroll		= dateOfScroll;
 
 	// Удаление элементов (если существовали)
 	CloseHandle();
@@ -122,7 +127,7 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 	SelectObject(hdc, m_hFont);	
 
 	// Номер текущего байта от начала файла
-	INT64 NumberOfByte = (FirstPaintingRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS;
+	INT64 NumberOfByte = (FirstPaintingRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS;
 
 	// Исходный цвет текста
 	COLORREF BaseTextColor = GetTextColor(hdc);
@@ -137,7 +142,7 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
 	{		
 		// Если все файлы закончились
-		if (NumberRow >= m_CountRows)
+		if (NumberRow + m_pDataOfScroll->ScrollPos >= m_pDataOfScroll->CountRows)
 		{
 			// Область после окончания самого длинного файла
 			RECT Rect = m_RectData;
@@ -148,9 +153,9 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 
 			break;
 		}
-
+		
 		// Отображение номера строки
-		PaintNumberLine(hdc, NumberRow, (NumberRow + m_ScrollPos) * LENGTH_OF_BYTE_STRINGS);
+		PaintNumberLine(hdc, NumberRow, (NumberRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS); \
 		
 		// Цикл по байтам в строке
 		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
@@ -262,28 +267,21 @@ INT AreaOfFile::GetCountOfVisibleRows()
 }
 
 
-void AreaOfFile::SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos)
+void AreaOfFile::UpdateData()
 {
-	m_RatioOfScroll		= ratioOfScroll;
-	m_MaxScrollPos		= maxScrollPos;
-	m_CountRows			= countRows;
-
 	UpdateNumberOfRow();
 	UpdateFont();
 	UpdateScrollInfo();
 }
 
 
-void AreaOfFile::Scroll(INT64 scrollInc)
+void AreaOfFile::Scroll()
 {
-	// Новая позиция скролла
-	m_ScrollPos += scrollInc;
-
 	// Прокрутка изображения
-	ScrollWindowEx(m_hWnd, 0, -m_HeightChar * scrollInc, &m_RectData, &m_RectData, NULL, NULL, SW_INVALIDATE);
+	ScrollWindowEx(m_hWnd, 0, -m_HeightChar * m_pDataOfScroll->ScrollInc, &m_RectData, &m_RectData, NULL, NULL, SW_INVALIDATE);
 
 	// Позиция бегунка
-	SetScrollPos(m_hScrollBar, SB_CTL, m_ScrollPos / m_RatioOfScroll + 0.5, true);
+	SetScrollPos(m_hScrollBar, SB_CTL, m_pDataOfScroll->ScrollPos / m_pDataOfScroll->RatioOfScroll + 0.5, true);
 
 	// Перерисовка
 	UpdateWindow(m_hWnd);
@@ -415,22 +413,14 @@ void AreaOfFile::UpdateScrollInfo()
 
 	scrollInfo.cbSize	= sizeof(scrollInfo);
 	scrollInfo.nMin		= 0;
-	scrollInfo.nMax		= m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
-	scrollInfo.nPage	= m_CountOfVisibleRows / m_RatioOfScroll;				// Возможно стоит сделать равным единице
+	scrollInfo.nMax		= m_pDataOfScroll->CountRows > m_CountOfVisibleRows ? m_pDataOfScroll->MaxScrollPos : 0;
+	scrollInfo.nPage	= m_CountOfVisibleRows / m_pDataOfScroll->RatioOfScroll;	// Возможно стоит сделать равным единице
 	scrollInfo.fMask	= SIF_RANGE | SIF_PAGE;
 
-	// Если текущая позиция скролла вышла за пределы, вернуть ее в начало
-	if (m_ScrollPos > m_CountRows - m_CountOfVisibleRows)
-	{
-		m_ScrollPos			= 0;
-		scrollInfo.nPos		= 0;
-		scrollInfo.fMask	|= SIF_POS;
-	}
-
 	// Если строки помещаются на экране
-	if (m_CountRows > m_CountOfVisibleRows)
+	if (m_pDataOfScroll->CountRows > m_CountOfVisibleRows)
 	{
-		scrollInfo.nMax		= m_MaxScrollPos;
+		scrollInfo.nMax		= m_pDataOfScroll->MaxScrollPos;
 		ShowScrollBar(m_hScrollBar, SB_CTL, TRUE);
 	}
 	else
@@ -531,7 +521,7 @@ void AreaOfFile::UpdateFont()
 void AreaOfFile::UpdateNumberOfRow()
 {
 	// Максимальное количество байт
-	INT64 CountBytes = m_CountRows * LENGTH_OF_BYTE_STRINGS;
+	INT64 CountBytes = m_pDataOfScroll->CountRows * LENGTH_OF_BYTE_STRINGS;
 
 	// Вычисление длины строки с номером
 	m_LengthOfNumberRow = 1;

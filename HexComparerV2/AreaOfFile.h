@@ -6,6 +6,37 @@
 #define LENGTH_OF_BUFFER 18	// Длина буфера
 #define LENGTH_OF_BYTE 3	// Длина буфера, содержащего байты в виде шестнадцатеричного числа
 
+/// <summary>
+/// Содержит общие данные о скролле
+/// </summary>
+struct DataOfScroll
+{
+	/// <summary>
+	/// Позиция скроллинга (номер первой отображаемой строки)
+	/// </summary>
+	INT64			ScrollPos = 0;
+
+	/// <summary>
+	/// Соотношение между реальной позицией скроллинга и позицией бегунка
+	/// </summary>
+	DOUBLE			RatioOfScroll = 0;
+
+	/// <summary>
+	/// Максимальная позиция бегунка
+	/// </summary>
+	INT				MaxScrollPos = 0;
+
+	/// <summary>
+	/// Количество прокручиваемых строк
+	/// </summary>
+	INT64			ScrollInc = 0;
+
+	/// <summary>
+	/// Максимальное число строк (реальных позиций скролла)
+	/// </summary>
+	INT64			CountRows = 0;
+};
+
 
 /// <summary>
 /// Класс, отвечающий за область отображения одного файла
@@ -22,6 +53,11 @@ private:
 	/// Указатель на объект, содержащий файлы
 	/// </summary>
 	FileCommander * m_pFileCommander				= NULL;
+
+	/// <summary>
+	/// Содержит общие данные о скролле
+	/// </summary>
+	DataOfScroll * m_pDataOfScroll					= NULL;
 
 	/// <summary>
 	/// Дескриптор главного окна
@@ -99,29 +135,9 @@ private:
 	INT				m_CountOfVisibleRows			= 0;
 
 	/// <summary>
-	/// Позиция скролла
-	/// </summary>
-	INT64			m_ScrollPos						= 0;
-
-	/// <summary>
-	/// Соотношение между реальной позицией скроллинга и позицией бегунка
-	/// </summary>
-	DOUBLE			m_RatioOfScroll					= 0;
-
-	/// <summary>
-	/// Максимальная позиция бегунка
-	/// </summary>
-	DWORD			m_MaxScrollPos					= 0;
-
-	/// <summary>
-	/// Общее количество строк
-	/// </summary>
-	INT64			m_CountRows						= 0;
-
-	/// <summary>
 	/// Обновляет данные скролла
 	/// </summary>
-	void		UpdateScrollInfo();
+	void			UpdateScrollInfo();
 
 	/// <summary>
 	/// Рисует номер строки
@@ -129,7 +145,7 @@ private:
 	/// <param name="hdc">Дескриптор контекста устройства</param>
 	/// <param name="numberLine">Номер строки на экране</param>
 	/// <param name="numberLineForView">Номер, который нужно отобразить</param>
-	void inline	PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView);
+	void inline		PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView);
 
 	/// <summary>
 	/// Рисует один байт
@@ -139,37 +155,37 @@ private:
 	/// <param name="numberByte">Номер байта в строке</param>
 	/// <param name="stringOfByte">Строка, содержащая шестнадцатеричное представление</param>
 	/// <param name="charOfByte">Символ байта</param>
-	void inline	PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte);
+	void inline		PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte);
 
 	/// <summary>
 	/// Формирует шестнадцатеричное представление для байта
 	/// </summary>
 	/// <param name="in">Значение байта</param>
 	/// <param name="out">Шестнадцатеричное представление</param>
-	void inline	ByteToHexString(byte in, OUT WCHAR out[]);
+	void inline		ByteToHexString(byte in, OUT WCHAR out[]);
 
 	/// <summary>
 	/// Обновляет шрифт
 	/// </summary>
-	void		UpdateFont();
+	void			UpdateFont();
 
 	/// <summary>
 	/// Обновляет данные о номере строки
 	/// </summary>
-	void		UpdateNumberOfRow();
+	void			UpdateNumberOfRow();
 
 	/// <summary>
 	/// Открывает стандартный диалог открытия файла
 	/// </summary>
 	/// <param name="file">Буфер для имени файла</param>
 	/// <returns></returns>
-	BOOL		OpenFileDialog(LPWSTR file);
+	BOOL			OpenFileDialog(LPWSTR file);
 
 	/// <summary>
 	/// Рисует рамку вокруг области
 	/// </summary>
 	/// <param name="hdc">Дескриптор контекста устройства</param>
-	void		PaintBorder(HDC hdc);
+	void			PaintBorder(HDC hdc);
 
 
 public:
@@ -182,8 +198,12 @@ public:
 	/// <param name="hInst">Дескриптор приложения</param>
 	/// <param name="hFont">Дескриптор шрифта (применяется для edit)</param>
 	/// <param name="fileCommander">Указатель на объект, содержащий файлы</param>
+	/// <param name="m_DateOfScroll">Указатель на объект, содержащий данные о скролле, общие для всех областей</param>
 	/// <returns>Успешность инициализации</returns>
-	BOOL		Initialize(INT number, HWND hWnd, HINSTANCE hInst, HFONT hFont, FileCommander * fileCommander);
+	BOOL		Initialize(INT number, HWND hWnd, HINSTANCE hInst, 
+					HFONT hFont, 
+					FileCommander * fileCommander, 
+					DataOfScroll * m_DateOfScroll);
 
 	/// <summary>
 	/// Закрытие всех открытых дескрипторов
@@ -230,16 +250,12 @@ public:
 	/// <summary>
 	/// Устанавливает ряд данных
 	/// </summary>
-	/// <param name="countRows">Общее количество строк</param>
-	/// <param name="ratioOfScroll">Соотношение между реальной позицией скроллинга и позицией бегунка</param>
-	/// <param name="maxScrollPos">Максимальная позиция бегунка</param>
-	void		SetData(INT64 countRows, double ratioOfScroll, INT maxScrollPos);
+	void		UpdateData();
 
 	/// <summary>
 	/// Выполняет скроллинг содержимого области
 	/// </summary>
-	/// <param name="scrollInc">Смещение по которуму нужно скроллить</param>
-	void		Scroll(INT64 scrollInc);
+	void		Scroll();
 
 	/// <summary>
 	/// Закрывает файл, если hEdit принадлежит области

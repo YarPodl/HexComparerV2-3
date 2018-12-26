@@ -30,7 +30,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Инициализация областей
-		m_AreasOfFiles[i].Initialize(i, hWnd, hInst, m_hFont, &m_FileCommander);
+		m_AreasOfFiles[i].Initialize(i, hWnd, hInst, m_hFont, &m_FileCommander, &m_DataOfScroll);
 	}
 }
 
@@ -51,7 +51,7 @@ void DisplayArea::SetSizeAreaOfFile()
 		
 		// Передача размера и данных о файлах
 		m_AreasOfFiles[i].setSize(ClientRectFileArea);
-		m_AreasOfFiles[i].SetData(m_CountRows, m_RatioOfScroll, m_MaxScrollPos);
+		m_AreasOfFiles[i].UpdateData();
 	}
 }
 
@@ -62,23 +62,34 @@ void DisplayArea::UpdateData()
 	m_CountOfByte = m_FileCommander.GetMaxSize();
 
 	// Перевычислить все параметры
-	m_CountRows = m_CountOfByte / LENGTH_OF_BYTE_STRINGS + 1;
-	m_CountRows = m_CountOfByte == 0 ? 0 : m_CountRows;
-	m_MaxScrollPos = m_CountRows > MAXINT ? MAXINT : m_CountRows;
-	m_RatioOfScroll = m_CountRows > MAXINT ? (double)m_CountRows / m_MaxScrollPos : 1;
-	m_ScrollPos = m_ScrollPos > m_CountRows ? m_MaxScrollPos : m_ScrollPos;
+	m_DataOfScroll.CountRows		= m_CountOfByte / LENGTH_OF_BYTE_STRINGS + 1;
+	m_DataOfScroll.CountRows		= m_CountOfByte == 0 ? 0 : m_DataOfScroll.CountRows;
+	m_DataOfScroll.MaxScrollPos		= m_DataOfScroll.CountRows > MAXINT ? MAXINT : m_DataOfScroll.CountRows;
+	m_DataOfScroll.RatioOfScroll	= m_DataOfScroll.CountRows > MAXINT
+											? (double)m_DataOfScroll.CountRows / m_DataOfScroll.MaxScrollPos
+											: 1;
+	m_DataOfScroll.ScrollPos		= m_DataOfScroll.ScrollPos > m_DataOfScroll.CountRows
+											? m_DataOfScroll.MaxScrollPos
+											: m_DataOfScroll.ScrollPos;
 
 	// Передать новые параметры всем областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		m_AreasOfFiles[i].SetData(m_CountRows, m_RatioOfScroll, m_MaxScrollPos);
+		m_AreasOfFiles[i].UpdateData();
 	}
-		
+
+	UpdateMinCountOfVisibleRows();
+
+
+	// Если текущая позиция скролла вышла за пределы, вернуть ее в начало
+	if (m_DataOfScroll.ScrollPos > m_DataOfScroll.CountRows - m_MinCountOfVisibleRows)
+	{
+		m_DataOfScroll.ScrollPos = 0;
+	}
+
 	// Перерисовать все
 	InvalidateRect(m_hWnd, NULL, TRUE);
 	UpdateWindow(m_hWnd);
-
-	UpdateMinCountOfVisibleRows();
 }
 
 
@@ -92,7 +103,7 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 	SetSizeAreaOfFile();
 
 	// Установить корректный скролл
-	m_ScrollInc = 0;
+	m_DataOfScroll.ScrollInc = 0;
 	Scroll();
 
 	// Минимальное количество видимых строк 
@@ -116,42 +127,42 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 
 void DisplayArea::ScrollLineUp()
 {
-	m_ScrollInc = -1;
+	m_DataOfScroll.ScrollInc = -1;
 	Scroll();
 }
 
 
 void DisplayArea::ScrollLineDown()
 {
-	m_ScrollInc = 1;
+	m_DataOfScroll.ScrollInc = 1;
 	Scroll();
 }
 
 
 void DisplayArea::ScrollPageUp(LPARAM lParam)
 {
-	m_ScrollInc = -GetCountOfVisibleRows(lParam);
+	m_DataOfScroll.ScrollInc = -GetCountOfVisibleRows(lParam);
 	Scroll();
 }
 
 
 void DisplayArea::ScrollPageDown(LPARAM lParam)
 {
-	m_ScrollInc = GetCountOfVisibleRows(lParam);
+	m_DataOfScroll.ScrollInc = GetCountOfVisibleRows(lParam);
 	Scroll();
 }
 
 
 void DisplayArea::ScrollBegin()
 {
-	m_ScrollInc = -m_ScrollPos;
+	m_DataOfScroll.ScrollInc = -m_DataOfScroll.ScrollPos;
 	Scroll();
 }
 
 
 void DisplayArea::ScrollEnd()
 {
-	m_ScrollInc = m_CountRows - m_ScrollPos - m_MinCountOfVisibleRows;
+	m_DataOfScroll.ScrollInc = m_DataOfScroll.CountRows - m_DataOfScroll.ScrollPos - m_MinCountOfVisibleRows;
 	Scroll();
 }
 
@@ -166,7 +177,8 @@ void DisplayArea::ScrollTo(LPARAM lParam)
 	GetScrollInfo((HWND)lParam, SB_CTL, &ScrollInfo);
 
 	// Вычисление реального сдвига позиции скролла
-	m_ScrollInc = (INT64)(m_RatioOfScroll * ScrollInfo.nTrackPos + 0.5) - m_ScrollPos;
+	m_DataOfScroll.ScrollInc = (INT64)
+		(m_DataOfScroll.RatioOfScroll * ScrollInfo.nTrackPos + 0.5) - m_DataOfScroll.ScrollPos;
 
 	Scroll();
 }
@@ -251,19 +263,19 @@ void DisplayArea::СlickButton(HWND hButton)
 void DisplayArea::Scroll()
 {
 	// Проверка на выход за границы
-	m_ScrollInc = max(
-		-m_ScrollPos,
-		min(m_ScrollInc, m_CountRows - m_MinCountOfVisibleRows - m_ScrollPos)
+	m_DataOfScroll.ScrollInc = max(
+		-m_DataOfScroll.ScrollPos,
+		min(m_DataOfScroll.ScrollInc, m_DataOfScroll.CountRows - m_MinCountOfVisibleRows - m_DataOfScroll.ScrollPos)
 	);
 
 	// Если необходимо скроллить
-	if (m_ScrollInc != 0)
+	if (m_DataOfScroll.ScrollInc != 0)
 	{
 		// Изменить позицию
-		m_ScrollPos += m_ScrollInc;
+		m_DataOfScroll.ScrollPos += m_DataOfScroll.ScrollInc;
 
 		// Выполнить скролл для каждой области
-		CALL_FOR_ALL_AREA(Scroll(m_ScrollInc))
+		CALL_FOR_ALL_AREA(Scroll())
 	}
 }
 
