@@ -165,18 +165,10 @@ void DisplayArea::ScrollTo(LPARAM lParam)
 	ScrollInfo.fMask = SIF_TRACKPOS;
 	GetScrollInfo((HWND)lParam, SB_CTL, &ScrollInfo);
 
-	// Если бегунок в конце полосы
-	if (ScrollInfo.nTrackPos + m_MinCountOfVisibleRows + 1 >= m_MaxScrollPos)
-	{
-		ScrollEnd();
-	}
-	else
-	{
-		// Вычисление реального сдвига позиции скролла
-		m_ScrollInc = (INT64)(m_RatioOfScroll * ScrollInfo.nTrackPos + 0.5) - m_ScrollPos;
+	// Вычисление реального сдвига позиции скролла
+	m_ScrollInc = (INT64)(m_RatioOfScroll * ScrollInfo.nTrackPos + 0.5) - m_ScrollPos;
 
-		Scroll();
-	}
+	Scroll();
 }
 
 

@@ -42,6 +42,13 @@ public:
 	BOOL		OpenFile(LPCWSTR fileName);
 
 	/// <summary>
+	/// Отображает новую страницу файла
+	/// </summary>
+	/// <param name="numberOfByte">Номер байта</param>
+	/// <returns>Успешность отображения</returns>
+	BOOL		MapView(INT64 numberOfByte);
+
+	/// <summary>
 	/// Получение байта по его номеру
 	/// </summary>
 	/// <param name="numberOfByte">Номер байта</param>

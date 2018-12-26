@@ -92,4 +92,4 @@
 // Класс окна программы
 #define WINDOWCLASS L"HexComparerV2"
 
-#define PAGE_OF_MAPPING 1 << 15
+#define PAGE_OF_MAPPING (1 << 17)

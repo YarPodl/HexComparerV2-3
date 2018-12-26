@@ -416,7 +416,7 @@ void AreaOfFile::UpdateScrollInfo()
 	scrollInfo.cbSize	= sizeof(scrollInfo);
 	scrollInfo.nMin		= 0;
 	scrollInfo.nMax		= m_CountRows > m_CountOfVisibleRows ? m_MaxScrollPos : 0;
-	scrollInfo.nPage	= m_CountOfVisibleRows;				// ¬озможно стоит сделать равным еденице
+	scrollInfo.nPage	= m_CountOfVisibleRows / m_RatioOfScroll;				// ¬озможно стоит сделать равным единице
 	scrollInfo.fMask	= SIF_RANGE | SIF_PAGE;
 
 	// ≈сли текуща€ позици€ скролла вышла за пределы, вернуть ее в начало
