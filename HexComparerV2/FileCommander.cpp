@@ -12,7 +12,7 @@ void FileCommander::Compare(INT64 numberOfByte)
 	for (INT NumbOfFile = 0; NumbOfFile < COUNT_OF_FILES; NumbOfFile++)
 	{
 		// Загружен ли файл
-		if (!IsLoadedFile(NumbOfFile))
+		if (!m_IsLoadedFiles[NumbOfFile])
 		{
 			m_CurrentStateOfBytes[NumbOfFile] = FileNtLoaded;
 		}

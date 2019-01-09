@@ -50,8 +50,6 @@ private:
 	/// </summary>
 	DisplayArea*	m_pDisplayArea	= NULL;
 
-protected:
-
 	/// <summary>
 	/// Оконная процедура, вызываемая после определения конкретного объекта MainWindow
 	/// </summary>

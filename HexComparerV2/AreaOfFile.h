@@ -14,27 +14,27 @@ struct DataOfScroll
 	/// <summary>
 	/// Позиция скроллинга (номер первой отображаемой строки)
 	/// </summary>
-	INT64			ScrollPos = 0;
+	INT64			ScrollPos		= 0;
 
 	/// <summary>
 	/// Соотношение между реальной позицией скроллинга и позицией бегунка
 	/// </summary>
-	DOUBLE			RatioOfScroll = 0;
+	DOUBLE			RatioOfScroll	= 0;
 
 	/// <summary>
 	/// Максимальная позиция бегунка
 	/// </summary>
-	INT				MaxScrollPos = 0;
+	INT				MaxScrollPos	= 0;
 
 	/// <summary>
 	/// Количество прокручиваемых строк
 	/// </summary>
-	INT64			ScrollInc = 0;
+	INT64			ScrollInc		= 0;
 
 	/// <summary>
 	/// Максимальное число строк (реальных позиций скролла)
 	/// </summary>
-	INT64			CountRows = 0;
+	INT64			CountRows		= 0;
 };
 
 

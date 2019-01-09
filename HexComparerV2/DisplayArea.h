@@ -83,11 +83,11 @@ public:
 	/// </summary>
 	/// <param name="hWnd">Дескриптор окна</param>
 	/// <param name="hInst">Дескриптор приложения</param>
-					DisplayArea(HWND hWnd, HINSTANCE hInst);
+	DisplayArea(HWND hWnd, HINSTANCE hInst);
 	/// <summary>
 	/// Закрывает все Handles
 	/// </summary>
-					~DisplayArea();
+	~DisplayArea();
 
 	/// <summary>
 	/// Изменение размеров окна

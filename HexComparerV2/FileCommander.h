@@ -43,6 +43,7 @@ private:
 	/// </summary>
 	/// <param name="numberOfByte">Номер байта</param>
 	void			Compare(INT64 numberOfByte);
+
 public:
 
 	/// <summary>
@@ -53,11 +54,11 @@ public:
 	/// <returns>Успешность открытия</returns>
 	BOOL			LoadFile(INT indexFile, LPCWSTR fileName);
 
-	// <summary>
-	// Проверяет загружен ли файл
-	// </summary>
-	// <param name="indexfile">Индекс файла для проверки</param>
-	// <returns>TRUE, если файл загружен</returns>
+	/// <summary>
+	/// Проверяет загружен ли файл
+	/// </summary>
+	/// <param name="indexfile">Индекс файла для проверки</param>
+	/// <returns>TRUE, если файл загружен</returns>
 	BOOL			IsLoadedFile(INT indexfile);
 
 	/// <summary>
