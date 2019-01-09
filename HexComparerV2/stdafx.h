@@ -56,11 +56,20 @@
 // Высота меню
 #define HEIGHT_MENU 20
 
-// Высота кнопок
-#define HEIGHT_BUTTONS 20
+// Высота кнопок открытия файлов
+#define HEIGHT_FILES_BUTTONS 20
 
-// Ширина кнопок
-#define WIDTH_BUTTONS 30
+// Ширина кнопок открытия файлов
+#define WIDTH_FILES_BUTTONS 30
+
+// Высота управляющих кнопок
+#define HEIGHT_BUTTONS 25
+
+// Ширина управляющих кнопок
+#define WIDTH_BUTTONS 200
+
+// Отступ между кнопками
+#define INDENT_BUTTON 10
 
 // Цвет различающихся байтов
 #define TEXT_COLOR_SELECT RGB(255, 0, 0)

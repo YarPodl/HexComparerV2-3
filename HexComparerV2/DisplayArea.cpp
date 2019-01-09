@@ -26,6 +26,39 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 				L"Times new Roman");
 	ReleaseDC(hWnd, hdc);
 
+
+	// Кнопка поиска следующего отличия
+	m_hButtonNext = CreateWindowW(
+		L"button",
+		L"Следующее отличие",
+		WS_CHILD | WS_VISIBLE,
+		INDENT_BUTTON, 0,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+
+	// Кнопка поиска предыдущего отличия
+	m_hButtonPrev = CreateWindowW(
+		L"button",
+		L"Предыдущее отличие",
+		WS_CHILD | WS_VISIBLE,
+		INDENT_BUTTON * 2 + WIDTH_BUTTONS, 0,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+
+	// Кнопка поиска количества отличий
+	m_hButtonSearch = CreateWindowW(
+		L"button",
+		L"Сравнить",
+		WS_CHILD | WS_VISIBLE,
+		INDENT_BUTTON * 3 + WIDTH_BUTTONS * 2, 0,
+		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		hWnd, nullptr, hInst, nullptr);
+
+	// Шрифт для кнопок
+	SendMessageW(m_hButtonNext, WM_SETFONT, (WPARAM)m_hFont, 1);
+	SendMessageW(m_hButtonPrev, WM_SETFONT, (WPARAM)m_hFont, 1);
+	SendMessageW(m_hButtonSearch, WM_SETFONT, (WPARAM)m_hFont, 1);
+
 	// Цикл прохода по областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
@@ -44,7 +77,7 @@ void DisplayArea::SetSizeAreaOfFile()
 	for (i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Координаты области
-		ClientRectFileArea.top		= 0;
+		ClientRectFileArea.top		= HEIGHT_BUTTONS * 1.5;
 		ClientRectFileArea.left		= m_WidthClient / COUNT_OF_FILES * i;
 		ClientRectFileArea.right	= m_WidthClient / COUNT_OF_FILES * (i + 1);
 		ClientRectFileArea.bottom	= m_HeightClient;
@@ -255,6 +288,7 @@ void DisplayArea::СhangeEdit(HWND hEdit)
 
 void DisplayArea::СlickButton(HWND hButton)
 {
+
 	CALL_FOR_ALL_AREA(СlickButton(hButton));
 	UpdateData();
 }

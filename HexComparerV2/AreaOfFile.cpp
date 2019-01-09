@@ -25,7 +25,7 @@ BOOL AreaOfFile::Initialize(
 		L"",
 		WS_CHILD | WS_VISIBLE | WS_BORDER,
 		m_RectMenu.left, m_RectMenu.top,
-		m_RectMenu.right - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.right - WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Проверка успешности
@@ -41,8 +41,8 @@ BOOL AreaOfFile::Initialize(
 		L"button",
 		L">>",
 		WS_CHILD | WS_VISIBLE,
-		m_RectMenu.left + m_RectMenu.right - WIDTH_BUTTONS, m_RectMenu.top,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.left + m_RectMenu.right - WIDTH_FILES_BUTTONS, m_RectMenu.top,
+		WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Проверка успешности
@@ -56,10 +56,10 @@ BOOL AreaOfFile::Initialize(
 		L"scrollbar",
 		NULL,
 		WS_CHILD | WS_VISIBLE | SBS_VERT,
-		m_RectMenu.left + m_RectMenu.right - WIDTH_BUTTONS, 
+		m_RectMenu.left + m_RectMenu.right - WIDTH_FILES_BUTTONS, 
 		m_RectMenu.top,
-		WIDTH_BUTTONS, 
-		HEIGHT_BUTTONS,
+		WIDTH_FILES_BUTTONS, 
+		HEIGHT_FILES_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Проверка успешности
@@ -220,13 +220,13 @@ void AreaOfFile::setSize(RECT client)
 	// Установка размера и позиции поля ввода
 	SetWindowPos(m_hEdit, HWND_BOTTOM,
 		m_RectMenu.left, m_RectMenu.top,
-		m_RectMenu.right - m_RectMenu.left - WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.right - m_RectMenu.left - WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
 		0);
 
 	// Установка размера и позиции кнопки
 	SetWindowPos(m_hButton, HWND_BOTTOM,
-		m_RectMenu.right - WIDTH_BUTTONS, m_RectMenu.top,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		m_RectMenu.right - WIDTH_FILES_BUTTONS, m_RectMenu.top,
+		WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
 		0);
 
 	// Установка размера и позиции ScrollBar

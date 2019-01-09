@@ -3,10 +3,18 @@
 
 
 
-void FileCommander::Compare(INT64 numberOfByte)
+BOOL FileCommander::Compare(INT64 numberOfByte)
 {
+	// Если байты с данным номером уже анализировались
+	if (numberOfByte == m_CurrentNumberByte)
+	{
+		return m_CurrentEqual;
+	}
+
 	INT		PrevByte	= -1;	// Значение байта предыдущего открытого файла (-1 - значит это первый открытый файл)
-	BOOL	Equal		= TRUE;	// Равны ли байты файлов в итоге
+
+	m_CurrentNumberByte		= numberOfByte;
+	m_CurrentEqual			= TRUE;	
 
 	// Цикл по файлам
 	for (INT NumbOfFile = 0; NumbOfFile < COUNT_OF_FILES; NumbOfFile++)
@@ -23,7 +31,7 @@ void FileCommander::Compare(INT64 numberOfByte)
 			// Если найдено различие
 			if ((PrevByte != -1) && (m_CurrentBytes[NumbOfFile] != PrevByte))
 			{
-				Equal = FALSE;
+				m_CurrentEqual = FALSE;
 			}
 
 			PrevByte = m_CurrentBytes[NumbOfFile];
@@ -31,14 +39,14 @@ void FileCommander::Compare(INT64 numberOfByte)
 		}
 		else
 		{
-			Equal = FALSE;
+			m_CurrentEqual = FALSE;
 			m_CurrentBytes[NumbOfFile] = 0;
 			m_CurrentStateOfBytes[NumbOfFile] = FileEnded;
 		}
 	}
 
 	// Если есть различие - установка этого состояния всем доступным байтам
-	if (!Equal)
+	if (!m_CurrentEqual)
 	{
 		for (INT numbOfFile = 0; numbOfFile < COUNT_OF_FILES; numbOfFile++)
 		{
@@ -48,6 +56,8 @@ void FileCommander::Compare(INT64 numberOfByte)
 			}
 		}
 	}
+
+	return m_CurrentEqual;
 }
 
 
@@ -80,19 +90,40 @@ void FileCommander::CloseFile(INT indexFile)
 
 StateOfByte FileCommander::GetByte(INT indexFile, INT64 numberOfByte, OUT BYTE & Byte)
 {
-	Byte = 0;
-
-	// Если байты с данным номером еще не анализировались
-	if (numberOfByte != m_CurrentNumberByte)
-	{
-		Compare(numberOfByte);
-	}
-
 	Byte = m_CurrentBytes[indexFile];
 
 	return m_CurrentStateOfBytes[indexFile];
 }
 
+
+INT64 FileCommander::FindDifference(INT64 beginOfSearch, INT step)
+{
+	INT64	MaxSizeOfFile	= GetMaxSize();	// Максимальный размер файла
+	BOOL	EqPrevByte		= TRUE;
+	BOOL	EqCurrentByte	= FALSE;
+
+	// Цикл по байтам файла
+	for (INT64 i = beginOfSearch; (i < MaxSizeOfFile) && (i >= 0); i += step)
+	{
+		// Сравнение байтов
+		if (i == 0)
+		{
+			EqPrevByte = TRUE;
+		}
+		else
+		{
+			EqPrevByte = Compare(i - 1);
+		}
+		EqCurrentByte = Compare(i);
+
+		if (EqPrevByte && !EqCurrentByte)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
 
 INT64 FileCommander::GetMaxSize()
 {

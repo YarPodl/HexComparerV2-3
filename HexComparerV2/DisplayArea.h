@@ -63,6 +63,21 @@ private:
 	HFONT			m_hFont				= NULL;
 
 	/// <summary>
+	/// Кнопка поиска следующего отличия
+	/// </summary>
+	HWND			m_hButtonNext		= NULL;
+
+	/// <summary>
+	/// Кнопка поиска предыдущего отличия
+	/// </summary>
+	HWND			m_hButtonPrev		= NULL;
+
+	/// <summary>
+	/// Кнопка поиска количества отличий
+	/// </summary>
+	HWND			m_hButtonSearch		= NULL;
+
+	/// <summary>
 	/// Скроллинг, согласно значению m_ScrollInc
 	/// </summary>
 	void			Scroll();
@@ -77,13 +92,19 @@ private:
 	/// </summary>
 	void			UpdateData();
 
+	void			NextDifference();
+	void			PrevDifference();
+	void			CountDifference();
+
 public:
+
 	/// <summary>
 	/// Инициализация
 	/// </summary>
 	/// <param name="hWnd">Дескриптор окна</param>
 	/// <param name="hInst">Дескриптор приложения</param>
 	DisplayArea(HWND hWnd, HINSTANCE hInst);
+
 	/// <summary>
 	/// Закрывает все Handles
 	/// </summary>
