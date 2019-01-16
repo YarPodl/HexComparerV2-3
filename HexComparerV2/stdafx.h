@@ -1,6 +1,6 @@
 #pragma once
 
-
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
 #include "resource.h"
@@ -8,7 +8,7 @@
 // Максимальная длина строк (буферных) в программе
 #define MAX_SIZE_STRING 100
 
-// Максимальная длина строк (буферных) в программе
+// Максимальная длина строки пути в программе
 #define LENGTH_PATH 1024
 
 // Высота символа

@@ -209,13 +209,13 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 void AreaOfFile::setSize(RECT client)
 {
 	// Размер области с данными
-	m_RectData = client;
-	m_RectData.top = client.top + HEIGHT_MENU;
-	m_RectData.right = client.right - WIDTH_SCROLLBAR;
+	m_RectData			= client;
+	m_RectData.top		= client.top + HEIGHT_MENU;
+	m_RectData.right	= client.right - WIDTH_SCROLLBAR;
 
 	// Размер меню
-	m_RectMenu = client;
-	m_RectMenu.bottom = client.top + HEIGHT_MENU;
+	m_RectMenu			= client;
+	m_RectMenu.bottom	= client.top + HEIGHT_MENU;
 
 	// Установка размера и позиции поля ввода
 	SetWindowPos(m_hEdit, HWND_BOTTOM,

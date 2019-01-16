@@ -13,6 +13,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 
 	// Создание основного шрифта
 	HDC hdc = GetDC(hWnd);
+
 	m_hFont = CreateFontW(MAX_FONT_SIZE_HEIGHT, 
 				(int)(MAX_FONT_SIZE_HEIGHT * FONT_SIZE_RELATION),
 				0, 0, 
@@ -24,6 +25,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 				DEFAULT_QUALITY, 
 				FF_MODERN, 
 				L"Times new Roman");
+
 	ReleaseDC(hWnd, hdc);
 
 
@@ -33,7 +35,8 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 		L"Следующее отличие",
 		WS_CHILD | WS_VISIBLE,
 		INDENT_BUTTON, 0,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
+		WIDTH_BUTTONS,
+		HEIGHT_BUTTONS,
 		hWnd, nullptr, hInst, nullptr);
 
 	// Кнопка поиска предыдущего отличия
@@ -125,6 +128,136 @@ void DisplayArea::UpdateData()
 	UpdateWindow(m_hWnd);
 }
 
+DWORD WINAPI DisplayArea::NextDifference(LPVOID lpParameter)
+{
+	DisplayArea * DisplayAreaObj = (DisplayArea *)lpParameter;
+
+	DisplayAreaObj->m_Search = TRUE;
+
+	INT64 Result = DisplayAreaObj->m_FileCommander.FindDifference(
+		DisplayAreaObj->m_DataOfScroll.ScrollPos + DisplayAreaObj->m_DataOfScroll.ScrollPos % LENGTH_OF_BYTE_STRINGS,	
+		1,																				
+		DisplayAreaObj->m_Search																
+	);
+
+	if (Result == -2)
+	{
+		strcpy(DisplayAreaObj->m_Message, "Поиск прерван");
+	}
+
+	if (Result == -1)
+	{
+		strcpy(DisplayAreaObj->m_Message, "Различий не найдено");
+	}
+
+	memset(DisplayAreaObj->m_Message, 0, MAX_SIZE_STRING);
+
+	// Смещение для скролла к следующему различию
+	DisplayAreaObj->m_DataOfScroll.ScrollInc = Result / LENGTH_OF_BYTE_STRINGS - DisplayAreaObj->m_DataOfScroll.ScrollPos;
+	DisplayAreaObj->m_Search = FALSE;
+
+	DisplayAreaObj->Scroll();
+	DisplayAreaObj->PaintStringMessage();
+
+	return 0;
+}
+
+DWORD WINAPI DisplayArea::PrevDifference(LPVOID lpParameter)
+{
+	DisplayArea * DisplayAreaObj = (DisplayArea *)lpParameter;
+
+	DisplayAreaObj->m_Search = TRUE;
+
+	INT64 Result = DisplayAreaObj->m_FileCommander.FindDifference(
+		DisplayAreaObj->m_DataOfScroll.ScrollPos + DisplayAreaObj->m_DataOfScroll.ScrollPos % LENGTH_OF_BYTE_STRINGS,
+		-1,
+		DisplayAreaObj->m_Search
+	);
+
+	if (Result == -2)
+	{
+		strcpy(DisplayAreaObj->m_Message, "Поиск прерван");
+	}
+
+	if (Result == -1)
+	{
+		strcpy(DisplayAreaObj->m_Message, "Различий не найдено");
+	}
+
+	memset(DisplayAreaObj->m_Message, 0, MAX_SIZE_STRING);
+
+	// Смещение для скролла к следующему различию
+	DisplayAreaObj->m_DataOfScroll.ScrollInc = Result / LENGTH_OF_BYTE_STRINGS - DisplayAreaObj->m_DataOfScroll.ScrollPos;
+	DisplayAreaObj->m_Search = FALSE;
+
+	DisplayAreaObj->Scroll();
+	DisplayAreaObj->PaintStringMessage();
+
+	return 0;
+}
+
+DWORD WINAPI DisplayArea::CountDifference(LPVOID lpParameter)
+{
+	DisplayArea * DisplayAreaObj = (DisplayArea *)lpParameter;
+
+	DisplayAreaObj->m_Search = TRUE;
+
+	INT64	Result	= 0;
+	INT64	Count	= -1;
+
+	while (Result >= 0)
+	{
+		Count++;
+		Result = DisplayAreaObj->m_FileCommander.FindDifference(
+			Result + 1,						// Поиск, начиная c места остановки
+			1,								// Поиск идет вперед
+			DisplayAreaObj->m_Search		// Остановка поиска
+		);
+	}
+
+	if (Result == -2)
+	{
+		wsprintfA(DisplayAreaObj->m_Message, "Поиск прерван, найдено %d различий", Count);
+	}
+
+	if (Result == -1)
+	{
+		wsprintfA(DisplayAreaObj->m_Message, "Найдено %d различий", Count);
+	}
+
+	DisplayAreaObj->PaintStringMessage();
+
+	return 0;
+}
+
+void DisplayArea::PaintStringMessage(HDC hdc)
+{
+	CHAR	Message[MAX_SIZE_STRING];	// Буфер для вывода
+
+	// Занесение сообщения в буфер и заполнение остатка пробелами
+	memset(Message, ' ', MAX_SIZE_STRING);
+
+	strncpy(Message, m_Message, strlen(m_Message));
+
+	// Установка базового шрифта
+	SelectObject(hdc, m_hFont);
+
+	// Отображение байта как Hex строки
+	TextOutA(
+		hdc,
+		INDENT_BUTTON * 4 + WIDTH_BUTTONS * 3, 0,
+		Message,
+		MAX_SIZE_STRING
+	);
+}
+
+void DisplayArea::PaintStringMessage()
+{
+	HDC hdc = GetDC(m_hWnd);
+	PaintStringMessage(hdc);
+	ReleaseDC(m_hWnd, hdc);
+}
+
 
 void DisplayArea::ChangeSize(LPARAM lParam)
 {
@@ -146,6 +279,7 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 
 void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 {
+
 	// Цикл прохода по областям
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
@@ -153,8 +287,7 @@ void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 		m_AreasOfFiles[i].PaintArea(hdc, ps);
 	}
 
-	// Возврат базового шрифта
-	SelectObject(hdc, m_hFont);
+	PaintStringMessage(hdc);
 }
 
 
@@ -274,7 +407,7 @@ bool DisplayArea::OpenFileFromEdit()
 			return TRUE;
 		}
 	}
-
+	
 	return FALSE;
 }
 
@@ -288,9 +421,23 @@ void DisplayArea::СhangeEdit(HWND hEdit)
 
 void DisplayArea::СlickButton(HWND hButton)
 {
-
-	CALL_FOR_ALL_AREA(СlickButton(hButton));
-	UpdateData();
+	if (hButton == m_hButtonNext)
+	{
+		CreateThread(NULL, 0, NextDifference, this, 0, NULL);
+	} 
+	else if (hButton == m_hButtonPrev)
+	{
+		CreateThread(NULL, 0, PrevDifference, this, 0, NULL);
+	} 
+	else if (hButton == m_hButtonSearch)
+	{
+		CreateThread(NULL, 0, CountDifference, this, 0, NULL);
+	}
+	else
+	{
+		CALL_FOR_ALL_AREA(СlickButton(hButton));
+		UpdateData();
+	}
 }
 
 

@@ -6,6 +6,47 @@
 /// </summary>
 class FileMapping
 {
+
+public:
+
+	/// <summary>
+	/// Открывает файл
+	/// </summary>
+	/// <param name="fileName">Путь к файлу </param>
+	/// <returns></returns>
+	BOOL		OpenFile(LPCWSTR fileName);
+
+	/// <summary>
+	/// Отображает новую страницу файла
+	/// </summary>
+	/// <param name="numberOfByte">Номер байта</param>
+	/// <returns>Успешность отображения</returns>
+	BOOL		MapView(INT64 numberOfByte);
+
+	/// <summary>
+	/// Получение байта по его номеру
+	/// </summary>
+	/// <param name="numberOfByte">Номер байта</param>
+	/// <param name="Byte">Переменная, в которую записывается значение байта</param>
+	/// <returns>Успешность доступа</returns>
+	BOOL		GetByte(INT64 numberOfByte, OUT BYTE & Byte);
+
+	/// <summary>
+	/// Возвращает размер файла
+	/// </summary>
+	/// <returns>Размер файла</returns>
+	INT64		GetSizeOfFile();
+
+	/// <summary>
+	/// Закрывает файл и все его дескрипторы
+	/// </summary>
+	void		CloseFile();
+
+	/// <summary>
+	/// Закрывает файл
+	/// </summary>
+	~FileMapping();
+
 private:
 	/// <summary>
 	/// Указатель на отображение файла
@@ -31,45 +72,5 @@ private:
 	/// Начало текущей страницы отображения
 	/// </summary>
 	INT64		m_BeginPage			=	0;
-
-public:
-
-	/// <summary>
-	/// Открывает файл
-	/// </summary>
-	/// <param name="fileName">Путь к файлу </param>
-	/// <returns></returns>
-	BOOL		OpenFile(LPCWSTR fileName);
-
-	/// <summary>
-	/// Отображает новую страницу файла
-	/// </summary>
-	/// <param name="numberOfByte">Номер байта</param>
-	/// <returns>Успешность отображения</returns>
-	BOOL		MapView(INT64 numberOfByte);
-
-	/// <summary>
-	/// Получение байта по его номеру
-	/// </summary>
-	/// <param name="numberOfByte">Номер байта</param>
-	/// <param name="Byte">Переменная, в которую записывается значение байта</param>
-	/// <returns>Успешность доступа</returns>
-	BOOL		getByte(INT64 numberOfByte, OUT BYTE & Byte);
-
-	/// <summary>
-	/// Возвращает размер файла
-	/// </summary>
-	/// <returns>Размер файла</returns>
-	INT64		getSizeOfFile();
-
-	/// <summary>
-	/// Закрывает файл и все его дескрипторы
-	/// </summary>
-	void		CloseFile();
-
-	/// <summary>
-	/// Закрывает файл
-	/// </summary>
-				~FileMapping();
 };
 

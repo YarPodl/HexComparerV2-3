@@ -12,16 +12,16 @@ public:
 	/// <summary>
 	/// Предварительная инициализация
 	/// </summary>
-	/// <param name="hInstance">Дескриптор приложения</param>
+	/// <param name="hInstance">Дескриптор приложения.</param>
 	/// <returns>TRUE - если инициализация успешна</returns>
-	virtual		BOOL				Create(HINSTANCE hInstance);
+	virtual		BOOL	Create(HINSTANCE hInstance);
 
 	/// <summary>
 	/// Запускает главное окно программы
 	/// </summary>
 	/// <param name="nCmdShow">Cостояние показа окна</param>
 	/// <returns>Код завершения работы</returns>
-	virtual		INT					Start(INT nCmdShow);
+	virtual		INT		Start(INT nCmdShow);
 
 	/// <summary>
 	/// Оконная процедура для всех объектов класса
@@ -64,26 +64,26 @@ private:
 	/// Прокрутка колесика мыши
 	/// </summary>
 	/// <param name="wParam">Значение прокрутки</param>
-	void						MouseWheel(WPARAM wParam);
+	void	MouseWheel(WPARAM wParam);
 
 	/// <summary>
 	/// Выбирает конкретную функцию скролла
 	/// </summary>
 	/// <param name="wParam"></param>
 	/// <param name="lParam"></param>
-	void						Scroll(WPARAM wParam, LPARAM lParam);
+	void	Scroll(WPARAM wParam, LPARAM lParam);
 
 	/// <summary>
 	/// Регистрация класса окна
 	/// </summary>
 	/// <param name="hInstance">Дескриптор приложения</param>
 	/// <returns>Код результата регистрации окна</returns>
-	ATOM						RegisterMyClass(HINSTANCE hInstance);
+	ATOM	RegisterMyClass(HINSTANCE hInstance);
 
 	/// <summary>
 	/// Создание главного окна
 	/// </summary>
 	/// <param name="hInstance">Дескриптор приложения</param>
 	/// <returns>TRUE, если окно создано успешно</returns>
-	BOOL						CreateMyWindow(HINSTANCE hInstance);
+	BOOL	CreateMyWindow(HINSTANCE hInstance);
 };

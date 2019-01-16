@@ -15,31 +15,33 @@ BOOL FileMapping::OpenFile(LPCWSTR fileName)
 
 	// Проверка успешности
 	if (m_hFile == INVALID_HANDLE_VALUE)	
-	{
 		return FALSE;
-	}
 
 	// Получение размера файла
 	LARGE_INTEGER FileSize = { 0 };
 	GetFileSizeEx(m_hFile, &FileSize);
 	m_SizeOfFile = FileSize.QuadPart;
 
-	// Создание маппинга
-	m_hFileMapping = CreateFileMappingW(m_hFile, NULL,
-				PAGE_READONLY, 
-				0, 0,
-				NULL);
-
-	// Проверка успешности
-	if ((m_hFileMapping == INVALID_HANDLE_VALUE) || (m_hFileMapping == NULL))	
+	// Если файл не пуст
+	if (m_SizeOfFile > 0)
 	{
-		return FALSE;
-	}
+		// Создание маппинга
+		m_hFileMapping = CreateFileMappingW(m_hFile, NULL,
+			PAGE_READONLY,
+			0, 0,
+			NULL);
 
-	// Создание отображения и проверка успешности
-	if (MapView(0) == FALSE)
-	{
-		return FALSE;
+		// Проверка успешности
+		if ((m_hFileMapping == INVALID_HANDLE_VALUE) || (m_hFileMapping == NULL))
+		{
+			return FALSE;
+		}
+
+		// Создание отображения и проверка успешности
+		if (MapView(0) == FALSE)
+		{
+			return FALSE;
+		}
 	}
 
 	// Закрытие файла
@@ -58,16 +60,17 @@ BOOL FileMapping::MapView(INT64 numberOfByte)
 		m_pMapViewOfFile = NULL;
 	}
 
+	// Вычисление позиции начала страницы отображения
 	m_BeginPage = numberOfByte - numberOfByte % (PAGE_OF_MAPPING / 2);
 
 	// Старшая и младшая часть смещения
-	DWORD OffsetHigh = ((m_BeginPage >> 32) & 0xFFFFFFFF);
-	DWORD OffsetLow = (m_BeginPage & 0xFFFFFFFF);
+	DWORD OffsetHigh	= ((m_BeginPage >> 32) & 0xFFFFFFFF);
+	DWORD OffsetLow		= (m_BeginPage & 0xFFFFFFFF);
 
 	// Размер страницы отображения
-	DWORD LengthPage = PAGE_OF_MAPPING;
+	DWORD LengthPage	= PAGE_OF_MAPPING;
 
-	if (m_BeginPage + PAGE_OF_MAPPING > m_SizeOfFile)
+	if (m_BeginPage + LengthPage > m_SizeOfFile)
 	{
 		LengthPage = m_SizeOfFile - m_BeginPage;
 	}
@@ -80,7 +83,7 @@ BOOL FileMapping::MapView(INT64 numberOfByte)
 }
 
 
-BOOL FileMapping::getByte(INT64 numberOfByte, OUT BYTE & Byte)
+BOOL FileMapping::GetByte(INT64 numberOfByte, OUT BYTE & Byte)
 {
 	// Кончился ли файл
 	if (numberOfByte >= m_SizeOfFile)
@@ -101,7 +104,7 @@ BOOL FileMapping::getByte(INT64 numberOfByte, OUT BYTE & Byte)
 }
 
 
-INT64 FileMapping::getSizeOfFile()
+INT64 FileMapping::GetSizeOfFile()
 {
 	return m_SizeOfFile;
 }

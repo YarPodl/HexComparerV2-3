@@ -23,6 +23,11 @@ private:
 	FileCommander	m_FileCommander;
 
 	/// <summary>
+	/// Текущая строка сообщения
+	/// </summary>
+	CHAR			m_Message[MAX_SIZE_STRING] = { 0 };
+
+	/// <summary>
 	/// Дескриптор главного окна
 	/// </summary>
 	HWND			m_hWnd				= NULL;
@@ -78,6 +83,11 @@ private:
 	HWND			m_hButtonSearch		= NULL;
 
 	/// <summary>
+	/// Проводится ли в данный момент поиск
+	/// </summary>
+	BOOL			m_Search = FALSE;
+
+	/// <summary>
 	/// Скроллинг, согласно значению m_ScrollInc
 	/// </summary>
 	void			Scroll();
@@ -92,9 +102,13 @@ private:
 	/// </summary>
 	void			UpdateData();
 
-	void			NextDifference();
-	void			PrevDifference();
-	void			CountDifference();
+	static DWORD	WINAPI NextDifference(LPVOID lpParameter);
+	static DWORD	WINAPI PrevDifference(LPVOID lpParameter);
+	static DWORD	WINAPI CountDifference(LPVOID lpParameter);
+
+	void				PaintStringMessage(HDC hdc);
+
+	void			PaintStringMessage();
 
 public:
 

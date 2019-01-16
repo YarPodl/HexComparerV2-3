@@ -13,7 +13,7 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 	// Проверка успешности
 	if (!CreateMyWindow(hInstance))
 	{
-		return FALSE;
+		return FALSE; 
 	}
 
 	m_pDisplayArea = new DisplayArea(m_hWnd, m_hInst);
@@ -28,9 +28,9 @@ INT MainWindow::Start(INT nCmdShow)
 	UpdateWindow(m_hWnd);
 
 	// Загрузка таблицы акселераторов
-	HACCEL hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
+	HACCEL	hAccelTabel = LoadAccelerators(m_hInst, MAKEINTRESOURCE(IDR_ACCELERATOR1));
 
-	MSG Msg;	// Сообщение
+	MSG		Msg;	// Сообщение
 
 	// Главный цикл сообщений
 	while (GetMessage(&Msg, NULL, 0, 0) > 0)
@@ -47,7 +47,7 @@ INT MainWindow::Start(INT nCmdShow)
 
 LRESULT MainWindow::StaticWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT Result;	// Результата
+	LRESULT		Result;	// Результата
 
 	// Если окно создается
 	if (message == WM_NCCREATE)
@@ -242,19 +242,19 @@ ATOM MainWindow::RegisterMyClass(HINSTANCE hInstance)
 {
 	WNDCLASSEXW Wcex;	// Данные о классе окна
 
-	Wcex.cbSize = sizeof(WNDCLASSEX);
+	Wcex.cbSize			= sizeof(WNDCLASSEX);
 
-	Wcex.style = CS_HREDRAW | CS_VREDRAW;
-	Wcex.lpfnWndProc = StaticWndProc;
-	Wcex.cbClsExtra = 0;
-	Wcex.cbWndExtra = 0;
-	Wcex.hInstance = hInstance;
-	Wcex.hIcon = LoadIcon(hInstance, NULL);
-	Wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-	Wcex.hbrBackground = BACKGROUND_WINDOW;
-	Wcex.lpszMenuName = NULL;
-	Wcex.lpszClassName = WINDOWCLASS;
-	Wcex.hIconSm = LoadIcon(hInstance, NULL);
+	Wcex.style			= CS_HREDRAW | CS_VREDRAW;
+	Wcex.lpfnWndProc	= StaticWndProc;
+	Wcex.cbClsExtra		= 0;
+	Wcex.cbWndExtra		= 0;
+	Wcex.hInstance		= hInstance;
+	Wcex.hIcon			= LoadIcon(hInstance, NULL);
+	Wcex.hCursor		= LoadCursor(nullptr, IDC_ARROW);
+	Wcex.hbrBackground	= BACKGROUND_WINDOW;
+	Wcex.lpszMenuName	= NULL;
+	Wcex.lpszClassName	= WINDOWCLASS;
+	Wcex.hIconSm		= LoadIcon(hInstance, NULL);
 
 	return RegisterClassExW(&Wcex);
 }
@@ -263,7 +263,9 @@ BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 {
 	// Создание структуры, содержащей адрес объекта MainWindow
 	MDICREATESTRUCT MdiStruct;
+
 	memset(&MdiStruct, 0, sizeof(MdiStruct));
+	
 	MdiStruct.lParam = (LPARAM)this;
 
 	// Создание окна
@@ -277,10 +279,5 @@ BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 		hInstance, 
 		& MdiStruct);
 
-	if (!m_hWnd)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+	return !!m_hWnd;	
 }

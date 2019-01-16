@@ -11,13 +11,13 @@ BOOL FileCommander::Compare(INT64 numberOfByte)
 		return m_CurrentEqual;
 	}
 
-	INT		PrevByte	= -1;	// Значение байта предыдущего открытого файла (-1 - значит это первый открытый файл)
+	INT		PrevByte		= -1;	// Значение байта предыдущего открытого файла (-1 - значит это первый открытый файл)
 
 	m_CurrentNumberByte		= numberOfByte;
 	m_CurrentEqual			= TRUE;	
 
 	// Цикл по файлам
-	for (INT NumbOfFile = 0; NumbOfFile < COUNT_OF_FILES; NumbOfFile++)
+	for (DWORD NumbOfFile = 0; NumbOfFile < COUNT_OF_FILES; NumbOfFile++)
 	{
 		// Загружен ли файл
 		if (!m_IsLoadedFiles[NumbOfFile])
@@ -26,7 +26,7 @@ BOOL FileCommander::Compare(INT64 numberOfByte)
 		}
 
 		// Кончился ли файл
-		else if (m_FileMappings[NumbOfFile].getByte(numberOfByte, OUT m_CurrentBytes[NumbOfFile]))
+		else if (m_FileMappings[NumbOfFile].GetByte(numberOfByte, OUT m_CurrentBytes[NumbOfFile]))
 		{
 			// Если найдено различие
 			if ((PrevByte != -1) && (m_CurrentBytes[NumbOfFile] != PrevByte))
@@ -34,21 +34,21 @@ BOOL FileCommander::Compare(INT64 numberOfByte)
 				m_CurrentEqual = FALSE;
 			}
 
-			PrevByte = m_CurrentBytes[NumbOfFile];
-			m_CurrentStateOfBytes[NumbOfFile] = ByteEqual;
+			PrevByte							= m_CurrentBytes[NumbOfFile];
+			m_CurrentStateOfBytes[NumbOfFile]	= ByteEqual;
 		}
 		else
 		{
-			m_CurrentEqual = FALSE;
-			m_CurrentBytes[NumbOfFile] = 0;
-			m_CurrentStateOfBytes[NumbOfFile] = FileEnded;
+			m_CurrentEqual						= FALSE;
+			m_CurrentBytes[NumbOfFile]			= 0;
+			m_CurrentStateOfBytes[NumbOfFile]	= FileEnded;
 		}
 	}
 
 	// Если есть различие - установка этого состояния всем доступным байтам
 	if (!m_CurrentEqual)
 	{
-		for (INT numbOfFile = 0; numbOfFile < COUNT_OF_FILES; numbOfFile++)
+		for (DWORD numbOfFile = 0; numbOfFile < COUNT_OF_FILES; numbOfFile++)
 		{
 			if (m_CurrentStateOfBytes[numbOfFile] == ByteEqual)
 			{
@@ -63,15 +63,10 @@ BOOL FileCommander::Compare(INT64 numberOfByte)
 
 BOOL FileCommander::LoadFile(INT indexFile, LPCWSTR fileName)
 {
-	if (m_FileMappings[indexFile].OpenFile(fileName))
-	{
-		m_IsLoadedFiles[indexFile] = TRUE;
-		return TRUE;
-	}
+	//
+	m_IsLoadedFiles[indexFile] = m_FileMappings[indexFile].OpenFile(fileName);
 
-	m_IsLoadedFiles[indexFile] = FALSE;
-
-	return FALSE;
+	return m_IsLoadedFiles[indexFile];
 }
 
 
@@ -90,13 +85,15 @@ void FileCommander::CloseFile(INT indexFile)
 
 StateOfByte FileCommander::GetByte(INT indexFile, INT64 numberOfByte, OUT BYTE & Byte)
 {
+	Compare(numberOfByte);
+
 	Byte = m_CurrentBytes[indexFile];
 
 	return m_CurrentStateOfBytes[indexFile];
 }
 
 
-INT64 FileCommander::FindDifference(INT64 beginOfSearch, INT step)
+INT64 FileCommander::FindDifference(INT64 beginOfSearch, INT step, BOOL & cancel)
 {
 	INT64	MaxSizeOfFile	= GetMaxSize();	// Максимальный размер файла
 	BOOL	EqPrevByte		= TRUE;
@@ -105,6 +102,12 @@ INT64 FileCommander::FindDifference(INT64 beginOfSearch, INT step)
 	// Цикл по байтам файла
 	for (INT64 i = beginOfSearch; (i < MaxSizeOfFile) && (i >= 0); i += step)
 	{
+		// Проверка на остановку
+		if (!cancel)
+		{
+			return -2;
+		}
+
 		// Сравнение байтов
 		if (i == 0)
 		{
@@ -133,7 +136,7 @@ INT64 FileCommander::GetMaxSize()
 	// Поиск максимального размера
 	for (INT i = 0; i < COUNT_OF_FILES; i++)
 	{
-		SizeOfFile = m_FileMappings[i].getSizeOfFile();
+		SizeOfFile = m_FileMappings[i].GetSizeOfFile();
 		if (SizeOfFile > MaxSizeOfFile)
 		{
 			MaxSizeOfFile = SizeOfFile;
