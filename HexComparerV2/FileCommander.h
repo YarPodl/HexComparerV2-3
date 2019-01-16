@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "FileMapping.h"
 
+#define DIFFERENCE_NOT_FOUND -1
+#define SEARCH_CANCELED -2
+
 /// <summary>
 /// Состояния байтов
 /// </summary>

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 
-
+#define ACCELERATOR_COMMAND 1
 
 BOOL MainWindow::Create(HINSTANCE hInstance)
 {
@@ -12,9 +12,7 @@ BOOL MainWindow::Create(HINSTANCE hInstance)
 
 	// Проверка успешности
 	if (!CreateMyWindow(hInstance))
-	{
 		return FALSE; 
-	}
 
 	m_pDisplayArea = new DisplayArea(m_hWnd, m_hInst);
 
@@ -101,7 +99,7 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 
 		// Обработка клавиш акселераторов
-		case 1:
+		case ACCELERATOR_COMMAND:
 			switch (LOWORD(wParam))
 			{
 			case ID_BEGIN:
@@ -250,7 +248,7 @@ ATOM MainWindow::RegisterMyClass(HINSTANCE hInstance)
 	Wcex.cbWndExtra		= 0;
 	Wcex.hInstance		= hInstance;
 	Wcex.hIcon			= LoadIcon(hInstance, NULL);
-	Wcex.hCursor		= LoadCursor(nullptr, IDC_ARROW);
+	Wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	Wcex.hbrBackground	= BACKGROUND_WINDOW;
 	Wcex.lpszMenuName	= NULL;
 	Wcex.lpszClassName	= WINDOWCLASS;
@@ -275,7 +273,7 @@ BOOL MainWindow::CreateMyWindow(HINSTANCE hInstance)
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0,
 		WIDTH_WINDOW, HEIGHT_WINDOW,
-		nullptr, nullptr, 
+		NULL, NULL, 
 		hInstance, 
 		& MdiStruct);
 

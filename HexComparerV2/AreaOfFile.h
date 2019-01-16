@@ -43,153 +43,9 @@ struct DataOfScroll
 /// </summary>
 class AreaOfFile
 {
-private:
-	/// <summary>
-	/// Собственный номер текущей области
-	/// </summary>
-	INT				m_NumberOfArea					= -1;
-
-	/// <summary>
-	/// Указатель на объект, содержащий файлы
-	/// </summary>
-	FileCommander * m_pFileCommander				= NULL;
-
-	/// <summary>
-	/// Содержит общие данные о скролле
-	/// </summary>
-	DataOfScroll * m_pDataOfScroll					= NULL;
-
-	/// <summary>
-	/// Дескриптор главного окна
-	/// </summary>
-	HWND			m_hWnd							= NULL;
-
-	/// <summary>
-	/// Дескриптор приложения
-	/// </summary>
-	HINSTANCE		m_hInst							= NULL;
-
-	/// <summary>
-	/// Координаты области с данными файла
-	/// </summary>
-	RECT			m_RectData						= { 0 };
-
-	/// <summary>
-	/// Координаты области с меню
-	/// </summary>
-	RECT			m_RectMenu						= { 0 };
-
-	/// <summary>
-	/// Строка формата для номера строки
-	/// </summary>
-	WCHAR			m_Format[LENGTH_OF_BUFFER]		= { 0 };
-
-	/// <summary>
-	/// Дескриптор поля ввода
-	/// </summary>
-	HWND			m_hEdit							= NULL;
-
-	/// <summary>
-	/// Дескриптор кнопки
-	/// </summary>
-	HWND			m_hButton						= NULL;
-
-	/// <summary>
-	/// Дескриптор скролл бара
-	/// </summary>
-	HWND			m_hScrollBar					= NULL;
-
-	/// <summary>
-	/// Дескриптор шрифта
-	/// </summary>
-	HFONT			m_hFont							= NULL;
-
-	/// <summary>
-	/// Координата x для столбца с байтами
-	/// </summary>
-	INT				m_IndentForBytes				= 0;
-
-	/// <summary>
-	/// Координата x для столбца представлением байтов как символов
-	/// </summary>
-	INT				m_IndentForLetters				= 0;
-	
-	/// <summary>
-	/// Ширина символа
-	/// </summary>
-	INT				m_WidthChar						= 0;
-
-	/// <summary>
-	/// Высота символа
-	/// </summary>
-	INT				m_HeightChar					= 0;
-
-	/// <summary>
-	/// Длина номера строки
-	/// </summary>
-	INT				m_LengthOfNumberRow				= 0;
-
-	/// <summary>
-	/// Количество видимых строк
-	/// </summary>
-	INT				m_CountOfVisibleRows			= 0;
-
-	/// <summary>
-	/// Обновляет данные скролла
-	/// </summary>
-	void			UpdateScrollInfo();
-
-	/// <summary>
-	/// Рисует номер строки
-	/// </summary>
-	/// <param name="hdc">Дескриптор контекста устройства</param>
-	/// <param name="numberLine">Номер строки на экране</param>
-	/// <param name="numberLineForView">Номер, который нужно отобразить</param>
-	void inline		PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView);
-
-	/// <summary>
-	/// Рисует один байт
-	/// </summary>
-	/// <param name="hdc">Дескриптор контекста устройства</param>
-	/// <param name="numberLine">Номер строки на экране</param>
-	/// <param name="numberByte">Номер байта в строке</param>
-	/// <param name="stringOfByte">Строка, содержащая шестнадцатеричное представление</param>
-	/// <param name="charOfByte">Символ байта</param>
-	void inline		PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte);
-
-	/// <summary>
-	/// Формирует шестнадцатеричное представление для байта
-	/// </summary>
-	/// <param name="in">Значение байта</param>
-	/// <param name="out">Шестнадцатеричное представление</param>
-	void inline		ByteToHexString(byte in, OUT WCHAR out[]);
-
-	/// <summary>
-	/// Обновляет шрифт
-	/// </summary>
-	void			UpdateFont();
-
-	/// <summary>
-	/// Обновляет данные о номере строки
-	/// </summary>
-	void			UpdateNumberOfRow();
-
-	/// <summary>
-	/// Открывает стандартный диалог открытия файла
-	/// </summary>
-	/// <param name="file">Буфер для имени файла</param>
-	/// <returns></returns>
-	BOOL			OpenFileDialog(LPWSTR file);
-
-	/// <summary>
-	/// Рисует рамку вокруг области
-	/// </summary>
-	/// <param name="hdc">Дескриптор контекста устройства</param>
-	void			PaintBorder(HDC hdc);
-
 
 public:
-	
+
 	/// <summary>
 	/// Инициализирует объект
 	/// </summary>
@@ -200,15 +56,18 @@ public:
 	/// <param name="fileCommander">Указатель на объект, содержащий файлы</param>
 	/// <param name="m_DateOfScroll">Указатель на объект, содержащий данные о скролле, общие для всех областей</param>
 	/// <returns>Успешность инициализации</returns>
-	BOOL		Initialize(INT number, HWND hWnd, HINSTANCE hInst, 
-					HFONT hFont, 
-					FileCommander * fileCommander, 
-					DataOfScroll * m_DateOfScroll);
+	BOOL		Initialize(
+		INT number,
+		HWND hWnd,
+		HINSTANCE hInst,
+		HFONT hFont,
+		FileCommander * fileCommander,
+		DataOfScroll * m_DateOfScroll);
 
 	/// <summary>
 	/// Закрытие всех открытых дескрипторов
 	/// </summary>
-	void		CloseHandle();
+	void		CloseHandles();
 
 	/// <summary>
 	/// Рисование всей области
@@ -221,7 +80,7 @@ public:
 	/// Устанавливает новый размер области
 	/// </summary>
 	/// <param name="client">Содержит новый размер области</param>
-	void		setSize(RECT client);
+	void		SetSize(RECT client);
 
 	/// <summary>
 	/// Возвращает дескриптор кнопки
@@ -273,5 +132,161 @@ public:
 	/// Открытие файла по пути из edit
 	/// </summary>
 	void		OpenFile();
+
+
+private:
+	/// <summary>
+	/// Собственный номер текущей области
+	/// </summary>
+	INT				m_NumberOfArea		= -1;
+
+	/// <summary>
+	/// Указатель на объект, содержащий файлы
+	/// </summary>
+	FileCommander * m_pFileCommander	= NULL;
+
+	/// <summary>
+	/// Содержит общие данные о скролле
+	/// </summary>
+	DataOfScroll *	m_pDataOfScroll		= NULL;
+
+	/// <summary>
+	/// Дескриптор главного окна
+	/// </summary>
+	HWND			m_hWnd				= NULL;
+
+	/// <summary>
+	/// Дескриптор приложения
+	/// </summary>
+	HINSTANCE		m_hInst				= NULL;
+
+	/// <summary>
+	/// Координаты области с данными файла
+	/// </summary>
+	RECT			m_RectData			= { 0 };
+
+	/// <summary>
+	/// Координаты области с меню
+	/// </summary>
+	RECT			m_RectMenu			= { 0 };
+
+	/// <summary>
+	/// Строка формата для номера строки
+	/// </summary>
+	WCHAR			m_Format[LENGTH_OF_BUFFER]	= { 0 };
+
+	/// <summary>
+	/// Дескриптор поля ввода
+	/// </summary>
+	HWND			m_hEdit				= NULL;
+
+	/// <summary>
+	/// Дескриптор кнопки
+	/// </summary>
+	HWND			m_hButton			= NULL;
+
+	/// <summary>
+	/// Дескриптор скролл бара
+	/// </summary>
+	HWND			m_hScrollBar		= NULL;
+
+	/// <summary>
+	/// Дескриптор шрифта
+	/// </summary>
+	HFONT			m_hFont				= NULL;
+
+	/// <summary>
+	/// Координата x для столбца с байтами
+	/// </summary>
+	INT				m_IndentForBytes	= 0;
+
+	/// <summary>
+	/// Координата x для столбца представлением байтов как символов
+	/// </summary>
+	INT				m_IndentForLetters	= 0;
+	
+	/// <summary>
+	/// Ширина символа
+	/// </summary>
+	INT				m_WidthChar			= 0;
+
+	/// <summary>
+	/// Высота символа
+	/// </summary>
+	INT				m_HeightChar		= 0;
+
+	/// <summary>
+	/// Длина номера строки
+	/// </summary>
+	INT				m_LengthOfNumberRow	= 0;
+
+	/// <summary>
+	/// Количество видимых строк
+	/// </summary>
+	INT				m_CountOfVisibleRows	= 0;
+
+	/// <summary>
+	/// Обновляет данные скролла
+	/// </summary>
+	void			UpdateScrollInfo();
+
+	/// <summary>
+	/// Рисует номер строки
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	/// <param name="numberLine">Номер строки на экране</param>
+	/// <param name="numberLineForView">Номер, который нужно отобразить</param>
+	void inline		PaintNumberLine(HDC hdc, INT numberLine, INT64 numberLineForView);
+
+	/// <summary>
+	/// Рисует один байт
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	/// <param name="numberLine">Номер строки на экране</param>
+	/// <param name="numberByte">Номер байта в строке</param>
+	/// <param name="stringOfByte">Строка, содержащая шестнадцатеричное представление</param>
+	/// <param name="charOfByte">Символ байта</param>
+	void inline		PaintByte(HDC hdc, INT numberLine, INT numberByte, WCHAR stringOfByte[], CHAR charOfByte);
+
+	/// <summary>
+	/// Рисует часть области, содержащую данные файла
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	/// <param name="FirstPaintingRow">Первая рисуемая строка (считая от первой видимой)</param>
+	/// <param name="LastPaintingRow">Последняя рисуемая строка (считая от первой видимой)</param>
+	void			PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPaintingRow);
+
+	BOOL CheckEnd(HDC hdc, DWORD NumberRow);
+
+	/// <summary>
+	/// Формирует шестнадцатеричное представление для байта
+	/// </summary>
+	/// <param name="in">Значение байта</param>
+	/// <param name="out">Шестнадцатеричное представление</param>
+	void inline		ByteToHexString(byte in, OUT WCHAR out[]);
+
+	/// <summary>
+	/// Обновляет шрифт
+	/// </summary>
+	void			UpdateFont();
+
+	/// <summary>
+	/// Обновляет данные о номере строки
+	/// </summary>
+	void			UpdateNumberOfRow();
+
+	/// <summary>
+	/// Открывает стандартный диалог открытия файла
+	/// </summary>
+	/// <param name="file">Буфер для имени файла</param>
+	/// <returns></returns>
+	BOOL			OpenFileDialog(LPWSTR file);
+
+	/// <summary>
+	/// Рисует рамку вокруг области
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	void			PaintBorder(HDC hdc);
+
 };
 

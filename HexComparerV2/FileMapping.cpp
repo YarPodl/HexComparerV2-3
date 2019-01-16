@@ -87,9 +87,7 @@ BOOL FileMapping::GetByte(INT64 numberOfByte, OUT BYTE & Byte)
 {
 	// Кончился ли файл
 	if (numberOfByte >= m_SizeOfFile)
-	{
 		return FALSE;
-	}
 
 	// Обновление страницы отображения файла
 	if ((numberOfByte < m_BeginPage) || (numberOfByte >= m_BeginPage + PAGE_OF_MAPPING))

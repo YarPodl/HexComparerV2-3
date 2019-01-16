@@ -10,6 +10,102 @@
 /// </summary>
 class DisplayArea
 {
+
+public:
+
+	/// <summary>
+	/// Инициализация
+	/// </summary>
+	/// <param name="hWnd">Дескриптор окна</param>
+	/// <param name="hInst">Дескриптор приложения</param>
+	DisplayArea(HWND hWnd, HINSTANCE hInst);
+
+	/// <summary>
+	/// Закрывает все Handles
+	/// </summary>
+	~DisplayArea();
+
+	/// <summary>
+	/// Изменение размеров окна
+	/// </summary>
+	/// <param name="lParam">Содержит новые размеры клиентской области окна</param>
+	void			ChangeSize(LPARAM lParam);
+
+	/// <summary>
+	/// Производит рисование всех областей
+	/// </summary>
+	/// <param name="hdc">Контекст устройства для рисования</param>
+	/// <param name="ps">Структура, содержащая сведения о рисовании</param>
+	void			Paint(HDC hdc, PAINTSTRUCT &ps);
+
+	/// <summary>
+	/// Скролл вверх на одну строку
+	/// </summary>
+	void			ScrollLineUp();
+
+	/// <summary>
+	/// Скролл вниз на одну строку
+	/// </summary>
+	void			ScrollLineDown();
+
+	/// <summary>
+	/// Скролл вверх на одну страницу
+	/// </summary>
+	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
+	void			ScrollPageUp(LPARAM lParam);
+
+	/// <summary>
+	/// Скролл вниз на одну страницу
+	/// </summary>
+	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
+	void			ScrollPageDown(LPARAM lParam);
+
+
+	/// <summary>
+	/// Скролл в начало
+	/// </summary>
+	void			ScrollBegin();
+
+	/// <summary>
+	/// Скролл в конец
+	/// </summary>
+	void			ScrollEnd();
+
+	/// <summary>
+	/// Скролл бегунком в конкретную позицию
+	/// </summary>
+	/// <param name="lParam">Содержит дескриптор скроллбара</param>
+	void			ScrollTo(LPARAM lParam);
+
+	/// <summary>
+	/// Возвращает количество видимых строк у области, которой принадлежит скроллбар
+	/// </summary>
+	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
+	INT				GetCountOfVisibleRows(LPARAM lParam);
+
+	/// <summary>
+	/// Вычисляет минимальное количество видимых строк для областей
+	/// </summary>
+	void			UpdateMinCountOfVisibleRows();
+
+	/// <summary>
+	/// Открывает файл по пути из edit, который находится в фокусе ввода
+	/// </summary>
+	/// <returns>Был ли открыт файл</returns>
+	bool			OpenFileFromEdit();
+
+	/// <summary>
+	/// Закрывает файл для переданного edit
+	/// </summary>
+	/// <param name="hEdit">Содержит дескритор поля ввода, которое было изменено</param>
+	void			СhangeEdit(HWND hEdit);
+
+	/// <summary>
+	/// Открывает диалог открытия файла
+	/// </summary>
+	/// <param name="hButton">Содержит дескритор нажатой кнопки</param>
+	void			СlickButton(HWND hButton);
+
 private:
 
 	/// <summary>
@@ -85,7 +181,7 @@ private:
 	/// <summary>
 	/// Проводится ли в данный момент поиск
 	/// </summary>
-	BOOL			m_Search = FALSE;
+	BOOL			m_Search			= FALSE;
 
 	/// <summary>
 	/// Скроллинг, согласно значению m_ScrollInc
@@ -106,103 +202,11 @@ private:
 	static DWORD	WINAPI PrevDifference(LPVOID lpParameter);
 	static DWORD	WINAPI CountDifference(LPVOID lpParameter);
 
-	void				PaintStringMessage(HDC hdc);
+	DWORD			SearchDifference(BOOL reverseLookup);
+
+	void			PaintStringMessage(HDC hdc);
 
 	void			PaintStringMessage();
 
-public:
-
-	/// <summary>
-	/// Инициализация
-	/// </summary>
-	/// <param name="hWnd">Дескриптор окна</param>
-	/// <param name="hInst">Дескриптор приложения</param>
-	DisplayArea(HWND hWnd, HINSTANCE hInst);
-
-	/// <summary>
-	/// Закрывает все Handles
-	/// </summary>
-	~DisplayArea();
-
-	/// <summary>
-	/// Изменение размеров окна
-	/// </summary>
-	/// <param name="lParam">Содержит новые размеры клиентской области окна</param>
-	void			ChangeSize(LPARAM lParam);
-
-	/// <summary>
-	/// Производит рисование всех областей
-	/// </summary>
-	/// <param name="hdc">Контекст устройства для рисования</param>
-	/// <param name="ps">Структура, содержащая сведения о рисовании</param>
-	void			Paint(HDC hdc, PAINTSTRUCT &ps);
-
-	/// <summary>
-	/// Скролл вверх на одну строку
-	/// </summary>
-	void			ScrollLineUp();
-
-	/// <summary>
-	/// Скролл вниз на одну строку
-	/// </summary>
-	void			ScrollLineDown();
-
-	/// <summary>
-	/// Скролл вверх на одну страницу
-	/// </summary>
-	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
-	void			ScrollPageUp(LPARAM lParam);
-
-	/// <summary>
-	/// Скролл вниз на одну страницу
-	/// </summary>
-	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
-	void			ScrollPageDown(LPARAM lParam);
-
-
-	/// <summary>
-	/// Скролл в начало
-	/// </summary>
-	void			ScrollBegin();
-
-	/// <summary>
-	/// Скролл в конец
-	/// </summary>
-	void			ScrollEnd();
-
-	/// <summary>
-	/// Скролл бегунком в конкретную позицию
-	/// </summary>
-	/// <param name="lParam">Содержит дескриптор скроллбара</param>
-	void			ScrollTo(LPARAM lParam);
-	
-	/// <summary>
-	/// Возвращает количество видимых строк у области, которой принадлежит скроллбар
-	/// </summary>
-	/// <param name="lParam">Содержит дескриптор скроллбара (допустимо NULL)</param>
-	INT				GetCountOfVisibleRows(LPARAM lParam);
-
-	/// <summary>
-	/// Вычисляет минимальное количество видимых строк для областей
-	/// </summary>
-	void			UpdateMinCountOfVisibleRows();
-
-	/// <summary>
-	/// Открывает файл по пути из edit, который находится в фокусе ввода
-	/// </summary>
-	/// <returns>Был ли открыт файл</returns>
-	bool			OpenFileFromEdit();
-
-	/// <summary>
-	/// Закрывает файл для переданного edit
-	/// </summary>
-	/// <param name="hEdit">Содержит дескритор поля ввода, которое было изменено</param>
-	void			СhangeEdit(HWND hEdit);
-
-	/// <summary>
-	/// Открывает диалог открытия файла
-	/// </summary>
-	/// <param name="hButton">Содержит дескритор нажатой кнопки</param>
-	void			СlickButton(HWND hButton);
 };
 

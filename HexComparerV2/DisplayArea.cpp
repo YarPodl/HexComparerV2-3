@@ -2,14 +2,14 @@
 #include "DisplayArea.h"
 
 // Вызов метода из параметра для каждого элемента массива m_AreasOfFiles
-#define CALL_FOR_ALL_AREA(func) for (DWORD i = 0; i < COUNT_OF_FILES; i++) { m_AreasOfFiles[i].func; }
+#define CALL_FOR_ALL_AREAS(func) for (DWORD i = 0; i < COUNT_OF_FILES; i++) { m_AreasOfFiles[i].func; }
 
 
 DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 {
 	// Запоминание дескрипторов
-	this->m_hWnd = hWnd;
-	this->m_hInst = hInst;
+	m_hWnd	= hWnd;
+	m_hInst	= hInst;
 
 	// Создание основного шрифта
 	HDC hdc = GetDC(hWnd);
@@ -37,7 +37,7 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 		INDENT_BUTTON, 0,
 		WIDTH_BUTTONS,
 		HEIGHT_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		hWnd, NULL, hInst, NULL);
 
 	// Кнопка поиска предыдущего отличия
 	m_hButtonPrev = CreateWindowW(
@@ -45,8 +45,9 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 		L"Предыдущее отличие",
 		WS_CHILD | WS_VISIBLE,
 		INDENT_BUTTON * 2 + WIDTH_BUTTONS, 0,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		WIDTH_BUTTONS, 
+		HEIGHT_BUTTONS,
+		hWnd, NULL, hInst, NULL);
 
 	// Кнопка поиска количества отличий
 	m_hButtonSearch = CreateWindowW(
@@ -54,16 +55,17 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 		L"Сравнить",
 		WS_CHILD | WS_VISIBLE,
 		INDENT_BUTTON * 3 + WIDTH_BUTTONS * 2, 0,
-		WIDTH_BUTTONS, HEIGHT_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		WIDTH_BUTTONS, 
+		HEIGHT_BUTTONS,
+		hWnd, NULL, hInst, NULL);
 
 	// Шрифт для кнопок
-	SendMessageW(m_hButtonNext, WM_SETFONT, (WPARAM)m_hFont, 1);
-	SendMessageW(m_hButtonPrev, WM_SETFONT, (WPARAM)m_hFont, 1);
-	SendMessageW(m_hButtonSearch, WM_SETFONT, (WPARAM)m_hFont, 1);
+	SendMessageW(m_hButtonNext,		WM_SETFONT, (WPARAM)m_hFont, 1);
+	SendMessageW(m_hButtonPrev,		WM_SETFONT, (WPARAM)m_hFont, 1);
+	SendMessageW(m_hButtonSearch,	WM_SETFONT, (WPARAM)m_hFont, 1);
 
 	// Цикл прохода по областям
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	for (DWORD i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Инициализация областей
 		m_AreasOfFiles[i].Initialize(i, hWnd, hInst, m_hFont, &m_FileCommander, &m_DataOfScroll);
@@ -74,10 +76,9 @@ DisplayArea::DisplayArea(HWND hWnd, HINSTANCE hInst)
 void DisplayArea::SetSizeAreaOfFile()
 {
 	RECT	ClientRectFileArea = { 0 };		// Координаты одной области файла
-	INT		i;								// Переменная цикла
 
 	// Цикл прохода по областям
-	for (i = 0; i < COUNT_OF_FILES; i++)
+	for (DWORD i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Координаты области
 		ClientRectFileArea.top		= HEIGHT_BUTTONS * 1.5;
@@ -86,7 +87,7 @@ void DisplayArea::SetSizeAreaOfFile()
 		ClientRectFileArea.bottom	= m_HeightClient;
 		
 		// Передача размера и данных о файлах
-		m_AreasOfFiles[i].setSize(ClientRectFileArea);
+		m_AreasOfFiles[i].SetSize(ClientRectFileArea);
 		m_AreasOfFiles[i].UpdateData();
 	}
 }
@@ -109,13 +110,9 @@ void DisplayArea::UpdateData()
 											: m_DataOfScroll.ScrollPos;
 
 	// Передать новые параметры всем областям
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		m_AreasOfFiles[i].UpdateData();
-	}
+	CALL_FOR_ALL_AREAS(UpdateData())
 
 	UpdateMinCountOfVisibleRows();
-
 
 	// Если текущая позиция скролла вышла за пределы, вернуть ее в начало
 	if (m_DataOfScroll.ScrollPos > m_DataOfScroll.CountRows - m_MinCountOfVisibleRows)
@@ -132,66 +129,45 @@ DWORD WINAPI DisplayArea::NextDifference(LPVOID lpParameter)
 {
 	DisplayArea * DisplayAreaObj = (DisplayArea *)lpParameter;
 
-	DisplayAreaObj->m_Search = TRUE;
-
-	INT64 Result = DisplayAreaObj->m_FileCommander.FindDifference(
-		DisplayAreaObj->m_DataOfScroll.ScrollPos + DisplayAreaObj->m_DataOfScroll.ScrollPos % LENGTH_OF_BYTE_STRINGS,	
-		1,																				
-		DisplayAreaObj->m_Search																
-	);
-
-	if (Result == -2)
-	{
-		strcpy(DisplayAreaObj->m_Message, "Поиск прерван");
-	}
-
-	if (Result == -1)
-	{
-		strcpy(DisplayAreaObj->m_Message, "Различий не найдено");
-	}
-
-	memset(DisplayAreaObj->m_Message, 0, MAX_SIZE_STRING);
-
-	// Смещение для скролла к следующему различию
-	DisplayAreaObj->m_DataOfScroll.ScrollInc = Result / LENGTH_OF_BYTE_STRINGS - DisplayAreaObj->m_DataOfScroll.ScrollPos;
-	DisplayAreaObj->m_Search = FALSE;
-
-	DisplayAreaObj->Scroll();
-	DisplayAreaObj->PaintStringMessage();
-
-	return 0;
+	return DisplayAreaObj->SearchDifference(FALSE);
 }
 
 DWORD WINAPI DisplayArea::PrevDifference(LPVOID lpParameter)
 {
 	DisplayArea * DisplayAreaObj = (DisplayArea *)lpParameter;
 
-	DisplayAreaObj->m_Search = TRUE;
+	return DisplayAreaObj->SearchDifference(TRUE);
+}
 
-	INT64 Result = DisplayAreaObj->m_FileCommander.FindDifference(
-		DisplayAreaObj->m_DataOfScroll.ScrollPos + DisplayAreaObj->m_DataOfScroll.ScrollPos % LENGTH_OF_BYTE_STRINGS,
-		-1,
-		DisplayAreaObj->m_Search
+DWORD DisplayArea::SearchDifference(BOOL reverseLookup)
+{
+	// Начался поиск
+	m_Search = TRUE;
+
+	INT64 Result = m_FileCommander.FindDifference(
+		m_DataOfScroll.ScrollPos + m_DataOfScroll.ScrollPos % LENGTH_OF_BYTE_STRINGS,
+		reverseLookup ? -1 : 1,
+		m_Search
 	);
 
-	if (Result == -2)
+	if (Result == SEARCH_CANCELED)
 	{
-		strcpy(DisplayAreaObj->m_Message, "Поиск прерван");
+		strcpy(m_Message, "Поиск прерван");
 	}
 
-	if (Result == -1)
+	if (Result == DIFFERENCE_NOT_FOUND)
 	{
-		strcpy(DisplayAreaObj->m_Message, "Различий не найдено");
+		strcpy(m_Message, "Различий не найдено");
 	}
 
-	memset(DisplayAreaObj->m_Message, 0, MAX_SIZE_STRING);
+	memset(m_Message, 0, MAX_SIZE_STRING);
 
 	// Смещение для скролла к следующему различию
-	DisplayAreaObj->m_DataOfScroll.ScrollInc = Result / LENGTH_OF_BYTE_STRINGS - DisplayAreaObj->m_DataOfScroll.ScrollPos;
-	DisplayAreaObj->m_Search = FALSE;
+	m_DataOfScroll.ScrollInc = Result / LENGTH_OF_BYTE_STRINGS - m_DataOfScroll.ScrollPos;
+	m_Search = FALSE;
 
-	DisplayAreaObj->Scroll();
-	DisplayAreaObj->PaintStringMessage();
+	Scroll();
+	PaintStringMessage();
 
 	return 0;
 }
@@ -254,7 +230,9 @@ void DisplayArea::PaintStringMessage(HDC hdc)
 void DisplayArea::PaintStringMessage()
 {
 	HDC hdc = GetDC(m_hWnd);
+
 	PaintStringMessage(hdc);
+
 	ReleaseDC(m_hWnd, hdc);
 }
 
@@ -262,8 +240,8 @@ void DisplayArea::PaintStringMessage()
 void DisplayArea::ChangeSize(LPARAM lParam)
 {
 	// Сохранение новых размеров клиентской области
-	m_HeightClient = HIWORD(lParam);
-	m_WidthClient = LOWORD(lParam);
+	m_HeightClient	= HIWORD(lParam);
+	m_WidthClient	= LOWORD(lParam);
 
 	// Передать новые размеры областям
 	SetSizeAreaOfFile();
@@ -279,13 +257,8 @@ void DisplayArea::ChangeSize(LPARAM lParam)
 
 void DisplayArea::Paint(HDC hdc, PAINTSTRUCT &ps)
 {
-
-	// Цикл прохода по областям
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
-	{
-		// Рисование каждой области
-		m_AreasOfFiles[i].PaintArea(hdc, ps);
-	}
+	// Рисование каждой области
+	CALL_FOR_ALL_AREAS(PaintArea(hdc, ps))
 
 	PaintStringMessage(hdc);
 }
@@ -338,8 +311,9 @@ void DisplayArea::ScrollTo(LPARAM lParam)
 	SCROLLINFO	ScrollInfo;		// Информация о скролле
 
 	// Получение информации о скролле
-	ScrollInfo.cbSize = sizeof(ScrollInfo);
-	ScrollInfo.fMask = SIF_TRACKPOS;
+	ScrollInfo.cbSize	= sizeof(ScrollInfo);
+	ScrollInfo.fMask	= SIF_TRACKPOS;
+
 	GetScrollInfo((HWND)lParam, SB_CTL, &ScrollInfo);
 
 	// Вычисление реального сдвига позиции скролла
@@ -353,7 +327,7 @@ void DisplayArea::ScrollTo(LPARAM lParam)
 
 INT DisplayArea::GetCountOfVisibleRows(LPARAM lParam)
 {
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	for (DWORD i = 0; i < COUNT_OF_FILES; i++)
 	{
 		if (m_AreasOfFiles[i].GetScrollBar() == (HWND)lParam)
 		{
@@ -370,7 +344,7 @@ void DisplayArea::UpdateMinCountOfVisibleRows()
 	INT MinCountOfVisibleRows = MAXINT;
 
 	// Цикл прохода по областям и поиска минимального значения для областей
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	for (DWORD i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Учитываются только области имеющие загруженный файл
 		if ((m_FileCommander.IsLoadedFile(i)) && (MinCountOfVisibleRows > m_AreasOfFiles[i].GetCountOfVisibleRows()))
@@ -393,7 +367,7 @@ bool DisplayArea::OpenFileFromEdit()
 {
 	HWND FocusWindow = GetFocus();	// Окно, захватившее фокус
 
-	for (INT i = 0; i < COUNT_OF_FILES; i++)
+	for (DWORD i = 0; i < COUNT_OF_FILES; i++)
 	{
 		// Если фокус в поле редактирования
 		if (m_AreasOfFiles[i].GetEdit() == FocusWindow)
@@ -414,7 +388,7 @@ bool DisplayArea::OpenFileFromEdit()
 
 void DisplayArea::СhangeEdit(HWND hEdit)
 {
-	CALL_FOR_ALL_AREA(СhangeEdit(hEdit));
+	CALL_FOR_ALL_AREAS(СhangeEdit(hEdit));
 	UpdateData();
 }
 
@@ -435,7 +409,7 @@ void DisplayArea::СlickButton(HWND hButton)
 	}
 	else
 	{
-		CALL_FOR_ALL_AREA(СlickButton(hButton));
+		CALL_FOR_ALL_AREAS(СlickButton(hButton));
 		UpdateData();
 	}
 }
@@ -456,7 +430,7 @@ void DisplayArea::Scroll()
 		m_DataOfScroll.ScrollPos += m_DataOfScroll.ScrollInc;
 
 		// Выполнить скролл для каждой области
-		CALL_FOR_ALL_AREA(Scroll())
+		CALL_FOR_ALL_AREAS(Scroll())
 	}
 }
 

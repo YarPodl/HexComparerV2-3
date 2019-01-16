@@ -17,7 +17,7 @@ BOOL AreaOfFile::Initialize(
 	m_pDataOfScroll		= dateOfScroll;
 
 	// Удаление элементов (если существовали)
-	CloseHandle();
+	CloseHandles();
 
 	// Поле ввода названия файла
 	m_hEdit = CreateWindowW(
@@ -26,13 +26,11 @@ BOOL AreaOfFile::Initialize(
 		WS_CHILD | WS_VISIBLE | WS_BORDER,
 		m_RectMenu.left, m_RectMenu.top,
 		m_RectMenu.right - WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		hWnd, NULL, hInst, NULL);
 
 	// Проверка успешности
 	if (!m_hEdit)
-	{
 		return FALSE;
-	}
 
 	SendMessageW(m_hEdit, WM_SETFONT, (WPARAM)hFont, 1);
 
@@ -43,13 +41,11 @@ BOOL AreaOfFile::Initialize(
 		WS_CHILD | WS_VISIBLE,
 		m_RectMenu.left + m_RectMenu.right - WIDTH_FILES_BUTTONS, m_RectMenu.top,
 		WIDTH_FILES_BUTTONS, HEIGHT_FILES_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		hWnd, NULL, hInst, NULL);
 
 	// Проверка успешности
 	if (!m_hButton)
-	{
 		return FALSE;
-	}
 
 	// Создание ScrollBar
 	m_hScrollBar = CreateWindowW(
@@ -60,13 +56,11 @@ BOOL AreaOfFile::Initialize(
 		m_RectMenu.top,
 		WIDTH_FILES_BUTTONS, 
 		HEIGHT_FILES_BUTTONS,
-		hWnd, nullptr, hInst, nullptr);
+		hWnd, NULL, hInst, NULL);
 
 	// Проверка успешности
 	if (!m_hScrollBar)
-	{
 		return FALSE;
-	}
 
 	UpdateNumberOfRow();
 
@@ -74,7 +68,7 @@ BOOL AreaOfFile::Initialize(
 }
 
 
-void AreaOfFile::CloseHandle()
+void AreaOfFile::CloseHandles()
 {
 	if (m_hEdit)
 	{
@@ -104,7 +98,6 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 	// Проверка загружен ли файл
 	if (!m_pFileCommander->IsLoadedFile(m_NumberOfArea))
 		return;
-
 	
 	INT		FirstPaintingRow;	// Первая рисуемая строка (считая от первой видимой)
 	INT		LastPaintingRow;	// Последняя рисуемая строка (считая от первой видимой)
@@ -126,87 +119,11 @@ void AreaOfFile::PaintArea(HDC hdc, PAINTSTRUCT & ps)
 	// Шрифт
 	SelectObject(hdc, m_hFont);	
 
-	// Номер текущего байта от начала файла
-	INT64 NumberOfByte = (FirstPaintingRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS;
-
-	// Исходный цвет текста
-	COLORREF BaseTextColor = GetTextColor(hdc);
-
-	
-	StateOfByte	State;										// Состояние байта
-	BYTE		Byte							= 0;		// Значение
-	CHAR		CharOfByte						= 0;		// Байт как символ	
-	WCHAR		StringOfByte[LENGTH_OF_BYTE]	= { 0 };	// Байт как Hex строка
-
-	// Цикл по строкам
-	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
-	{		
-		// Если все файлы закончились
-		if (NumberRow + m_pDataOfScroll->ScrollPos >= m_pDataOfScroll->CountRows)
-		{
-			// Область после окончания самого длинного файла
-			RECT Rect = m_RectData;
-			Rect.top = m_RectData.top + m_HeightChar * NumberRow;
-
-			// Заливка области
-			FillRect(hdc, &Rect, BACKGROUND_WINDOW);
-
-			break;
-		}
-		
-		// Отображение номера строки
-		PaintNumberLine(hdc, NumberRow, (NumberRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS); \
-		
-		// Цикл по байтам в строке
-		for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
-		{
-			// Получение байта и его состояния 
-			State = m_pFileCommander->GetByte(m_NumberOfArea, NumberOfByte, Byte);
-			
-			// В зависимости от состояния байта
-			switch (State)
-			{
-			// Отобразить пробелы, если файл кончился
-			case FileEnded:
-				CharOfByte = ' ';
-				StringOfByte[0] = L' ';
-				StringOfByte[1] = L' ';
-				break;
-
-			// Отобразить байт базовым цветом, если байты равны
-			case ByteEqual:
-				SetTextColor(hdc, BaseTextColor);
-				CharOfByte = Byte <= 31 ? '.' : Byte;
-				ByteToHexString(Byte, StringOfByte);
-				break;
-
-			// Отобразить байт выделенным цветом, если байты не равны
-			case ByteNotEqual:
-
-				SetTextColor(hdc, TEXT_COLOR_SELECT);
-				CharOfByte = Byte <= 31 ? '.' : Byte;
-				ByteToHexString(Byte, StringOfByte);
-				break;
-
-			default:
-				break;
-			}
-
-			// Отрисовка байта
-			PaintByte(hdc, NumberRow, NumbOfByteInRow, StringOfByte, CharOfByte);
-
-			NumberOfByte++;
-			
-		}
-
-		// Возврат исходного цвета
-		SetTextColor(hdc, BaseTextColor);
-		
-	}
-
+	// Отображение данных
+	PaintDataOfFile(hdc, FirstPaintingRow, LastPaintingRow);
 }
 
-void AreaOfFile::setSize(RECT client)
+void AreaOfFile::SetSize(RECT client)
 {
 	// Размер области с данными
 	m_RectData			= client;
@@ -305,6 +222,7 @@ void AreaOfFile::СlickButton(HWND hButton)
 		WCHAR buffer[LENGTH_PATH];
 		if (OpenFileDialog(buffer))
 		{
+			// Отображение названия выбранного файла
 			SetWindowTextW(m_hEdit, buffer);
 
 			OpenFile();
@@ -433,6 +351,96 @@ void AreaOfFile::UpdateScrollInfo()
 }
 
 
+
+void AreaOfFile::PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPaintingRow)
+{
+	// Номер текущего байта от начала файла
+	INT64 NumberOfByte = (FirstPaintingRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS;
+
+	// Исходный цвет текста
+	COLORREF BaseTextColor = GetTextColor(hdc);
+
+
+	StateOfByte	State;									// Состояние байта
+	BYTE		Byte = 0;								// Значение
+	CHAR		CharOfByte = 0;							// Байт как символ	
+	WCHAR		StringOfByte[LENGTH_OF_BYTE] = { 0 };	// Байт как Hex строка
+
+	// Цикл по строкам
+	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
+	{
+		if (CheckEnd(hdc, NumberRow))
+			break;
+
+		// Отображение номера строки
+		PaintNumberLine(hdc, NumberRow, (NumberRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS); \
+
+			// Цикл по байтам в строке
+			for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
+			{
+				// Получение байта и его состояния 
+				State = m_pFileCommander->GetByte(m_NumberOfArea, NumberOfByte, Byte);
+
+				// В зависимости от состояния байта
+				switch (State)
+				{
+					// Отобразить пробелы, если файл кончился
+				case FileEnded:
+					CharOfByte		= ' ';
+					StringOfByte[0] = L' ';
+					StringOfByte[1] = L' ';
+					break;
+
+					// Отобразить байт базовым цветом, если байты равны
+				case ByteEqual:
+					SetTextColor(hdc, BaseTextColor);
+					CharOfByte = Byte <= 31 ? '.' : Byte;
+					ByteToHexString(Byte, StringOfByte);
+					break;
+
+					// Отобразить байт выделенным цветом, если байты не равны
+				case ByteNotEqual:
+					SetTextColor(hdc, TEXT_COLOR_SELECT);
+					CharOfByte = Byte <= 31 ? '.' : Byte;
+					ByteToHexString(Byte, StringOfByte);
+					break;
+
+				default:
+					break;
+				}
+
+				// Отрисовка байта
+				PaintByte(hdc, NumberRow, NumbOfByteInRow, StringOfByte, CharOfByte);
+
+				NumberOfByte++;
+			}
+
+		// Возврат исходного цвета
+		SetTextColor(hdc, BaseTextColor);
+	}
+}
+
+BOOL AreaOfFile::CheckEnd(HDC hdc, DWORD NumberRow)
+{
+	// Если все файлы закончились
+	if (NumberRow + m_pDataOfScroll->ScrollPos >= m_pDataOfScroll->CountRows)
+	{
+		// Область после окончания самого длинного файла
+		RECT Rect	= m_RectData;
+		Rect.top	= m_RectData.top + m_HeightChar * NumberRow;
+
+		// Не заливать рамку
+		Rect.left++;
+		Rect.right--;
+
+		// Заливка области
+		FillRect(hdc, &Rect, BACKGROUND_WINDOW);
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
 
 void inline AreaOfFile::ByteToHexString(byte in, OUT WCHAR out[])
 {
