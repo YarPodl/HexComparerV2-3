@@ -106,6 +106,11 @@ public:
 	/// <param name="hButton">Содержит дескритор нажатой кнопки</param>
 	void			СlickButton(HWND hButton);
 
+	/// <summary>
+	/// Отменяет поиск
+	/// </summary>
+	void			CancelSearch();
+
 private:
 
 	/// <summary>
@@ -198,15 +203,45 @@ private:
 	/// </summary>
 	void			UpdateData();
 
+	/// <summary>
+	/// Поиск следующего отличия
+	/// </summary>
+	/// <param name="lpParameter">Содержит адрес объекта DisplayArea</param>
+	/// <returns>Код завершения потока</returns>
 	static DWORD	WINAPI NextDifference(LPVOID lpParameter);
+
+	/// <summary>
+	/// Поиск предыдущего отличия
+	/// </summary>
+	/// <param name="lpParameter">Содержит адрес объекта DisplayArea</param>
+	/// <returns>Код завершения потока</returns>
 	static DWORD	WINAPI PrevDifference(LPVOID lpParameter);
+
+	/// <summary>
+	/// Поиск количества отличий
+	/// </summary>
+	/// <param name="lpParameter">Содержит адрес объекта DisplayArea</param>
+	/// <returns>Код завершения потока</returns>
 	static DWORD	WINAPI CountDifference(LPVOID lpParameter);
 
+	/// <summary>
+	/// Поиск отличия
+	/// </summary>
+	/// <param name="reverseLookup">True, если поиск едет в обратном направлении</param>
+	/// <returns>Код завершения потока</returns>
 	DWORD			SearchDifference(BOOL reverseLookup);
 
+	/// <summary>
+	/// Отображение строки сообщения
+	/// </summary>
+	/// <param name="hdc">Контекст устройства для рисования</param>
 	void			PaintStringMessage(HDC hdc);
 
-	void			PaintStringMessage();
+	/// <summary>
+	/// Отображение сообщения из m_Message и обновляет его если параметр не NULL
+	/// </summary>
+	/// <param name="message">Строка сообщения</param>
+	void			PaintStringMessage(CHAR * message = NULL);
 
 };
 

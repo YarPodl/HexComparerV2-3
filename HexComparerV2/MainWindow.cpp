@@ -130,6 +130,10 @@ LRESULT MainWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 				m_pDisplayArea->OpenFileFromEdit();
 				break;
 
+			case ID_ESCAPE:
+				m_pDisplayArea->CancelSearch();
+				break;
+
 			default:
 				break;
 			}

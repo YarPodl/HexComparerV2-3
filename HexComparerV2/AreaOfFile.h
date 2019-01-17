@@ -256,7 +256,23 @@ private:
 	/// <param name="LastPaintingRow">Последняя рисуемая строка (считая от первой видимой)</param>
 	void			PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPaintingRow);
 
-	BOOL CheckEnd(HDC hdc, DWORD NumberRow);
+	/// <summary>
+	/// Устанавливает значения для отображения байта
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	/// <param name="color">Цвет байта</param>
+	/// <param name="byte">Значение байта</param>
+	/// <param name="charOfByte">Символ байта</param>
+	/// <param name="stringOfByte">Шестнадцатеричный вид байта</param>
+	void SetViewOfByte(HDC hdc, COLORREF color, BYTE byte, OUT CHAR &charOfByte, OUT WCHAR stringOfByte[LENGTH_OF_BYTE]);
+
+	/// <summary>
+	/// Проверяет, закончился ли самый большой файл на данной строке. Если да, то очищает пространство после конца файла
+	/// </summary>
+	/// <param name="hdc">Дескриптор контекста устройства</param>
+	/// <param name="NumberRow">Номер строки для проверки</param>
+	/// <returns>True, если файл закончился</returns>
+	BOOL			CheckEnd(HDC hdc, DWORD NumberRow);
 
 	/// <summary>
 	/// Формирует шестнадцатеричное представление для байта

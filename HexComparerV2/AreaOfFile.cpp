@@ -360,20 +360,19 @@ void AreaOfFile::PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPainting
 	// Исходный цвет текста
 	COLORREF BaseTextColor = GetTextColor(hdc);
 
-
-	StateOfByte	State;									// Состояние байта
-	BYTE		Byte = 0;								// Значение
-	CHAR		CharOfByte = 0;							// Байт как символ	
-	WCHAR		StringOfByte[LENGTH_OF_BYTE] = { 0 };	// Байт как Hex строка
+	StateOfByte	State;										// Состояние байта
+	BYTE		Byte = 0;									// Значение
+	CHAR		CharOfByte = 0;								// Байт как символ	
+	WCHAR		StringOfByte[LENGTH_OF_BYTE] = { 0 };		// Байт как Hex строка
 
 	// Цикл по строкам
-	for (DWORD NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
+	for (INT /* Тут точно INT !! */ NumberRow = FirstPaintingRow; NumberRow < LastPaintingRow; NumberRow++)
 	{
 		if (CheckEnd(hdc, NumberRow))
 			break;
 
 		// Отображение номера строки
-		PaintNumberLine(hdc, NumberRow, (NumberRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS); \
+		PaintNumberLine(hdc, NumberRow, (NumberRow + m_pDataOfScroll->ScrollPos) * LENGTH_OF_BYTE_STRINGS); 
 
 			// Цикл по байтам в строке
 			for (DWORD NumbOfByteInRow = 0; NumbOfByteInRow < LENGTH_OF_BYTE_STRINGS; NumbOfByteInRow++)
@@ -386,23 +385,19 @@ void AreaOfFile::PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPainting
 				{
 					// Отобразить пробелы, если файл кончился
 				case FileEnded:
-					CharOfByte		= ' ';
+					CharOfByte		=  ' ';
 					StringOfByte[0] = L' ';
 					StringOfByte[1] = L' ';
 					break;
 
 					// Отобразить байт базовым цветом, если байты равны
 				case ByteEqual:
-					SetTextColor(hdc, BaseTextColor);
-					CharOfByte = Byte <= 31 ? '.' : Byte;
-					ByteToHexString(Byte, StringOfByte);
+					SetViewOfByte(hdc, BaseTextColor, Byte, CharOfByte, StringOfByte);
 					break;
 
 					// Отобразить байт выделенным цветом, если байты не равны
 				case ByteNotEqual:
-					SetTextColor(hdc, TEXT_COLOR_SELECT);
-					CharOfByte = Byte <= 31 ? '.' : Byte;
-					ByteToHexString(Byte, StringOfByte);
+					SetViewOfByte(hdc, TEXT_COLOR_SELECT, Byte, CharOfByte, StringOfByte);
 					break;
 
 				default:
@@ -418,6 +413,18 @@ void AreaOfFile::PaintDataOfFile(HDC hdc, INT FirstPaintingRow, INT LastPainting
 		// Возврат исходного цвета
 		SetTextColor(hdc, BaseTextColor);
 	}
+}
+
+void AreaOfFile::SetViewOfByte(HDC hdc, COLORREF color, BYTE byte, OUT CHAR &charOfByte, OUT WCHAR stringOfByte[LENGTH_OF_BYTE])
+{
+	// Цвет байта
+	SetTextColor(hdc, color);
+
+	// Символ байта
+	charOfByte = byte <= 31 ? '.' : byte;
+
+	// Шестнадцатеричный вид байта
+	ByteToHexString(byte, stringOfByte);
 }
 
 BOOL AreaOfFile::CheckEnd(HDC hdc, DWORD NumberRow)
